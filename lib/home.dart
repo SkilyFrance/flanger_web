@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flanger_web_version/bodyEditing.dart';
 import 'package:flanger_web_version/commentContainer.dart';
+import 'package:flanger_web_version/postContainer.dart';
 import 'package:flanger_web_version/subjectEditing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reaction_button/flutter_reaction_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -14,7 +16,6 @@ class HomePage extends StatefulWidget {
   String currentUser;
   String currentUserUsername;
   String currentUserPhoto;
-  String currentSoundcloud;
   String notificationsToken;
 
   HomePage({
@@ -22,7 +23,6 @@ class HomePage extends StatefulWidget {
     this.currentUser, 
     this.currentUserUsername,
     this.currentUserPhoto,
-    this.currentSoundcloud,
     this.notificationsToken,
     }) : super(key: key);
 
@@ -37,9 +37,11 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
 
   Stream<dynamic> _fetchAllPosts;
-  ScrollController _listPostScrollController = ScrollController();
+  ScrollController _listPostScrollController = new ScrollController();
   List<bool> listIsExpanded = [];
   List<TextEditingController> listTextEditingController = [];
+  ScrollController _feedScrollController = new ScrollController();
+
 
   //PostEditing controller
   TextEditingController _subjectEditingController = new TextEditingController();
@@ -91,6 +93,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   void initState() {
     _fetchAllPosts = fetchAllPosts();
     getCurrentSoundCloud();
+    _feedScrollController = new ScrollController();
     _listPostScrollController = new ScrollController();
     super.initState();
   }
@@ -264,7 +267,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
             FocusScope.of(context).requestFocus(new FocusNode());
             },
         child: new SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          controller: _feedScrollController,
+          scrollDirection: Axis.vertical,
+          physics: new AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(bottom: 100.0),
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -485,7 +490,28 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                               child: new Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                              new InkWell(
+                                  new PostContainer(
+                                    comesFromHome: true,
+                                    currentUser: widget.currentUser,
+                                    currentUsername: widget.currentUserUsername,
+                                    currentUserphoto: widget.currentUserPhoto,
+                                    currentSoundCloud: currentSoundCloud,
+                                    listIsExpanded: listIsExpanded,
+                                    index: index,
+                                    listTextEditingController: listTextEditingController,
+                                    postID: ds['postID'],
+                                    typeOfPost: ds['typeOfPost'],
+                                    timestamp: ds['timestamp'],
+                                    adminUID: ds['adminUID'],
+                                    subject: ds['subject'],
+                                    body: ds['body'],
+                                    likes: ds['likes'],
+                                    comments: ds['comments'],
+                                    adminProfilephoto: ds['adminProfilephoto'],
+                                    adminUsername: ds['adminUsername'],
+                                    adminSoundCloud: ds['adminSoundCloud'],
+                                  ),
+                             /* new InkWell(
                                 onTap: () {
                                   if(listIsExpanded[index] == true) {
                                     setState(() {
@@ -540,7 +566,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                             showDialog(
                                                 context: context,
                                                 builder: (_) => new AlertDialog(
-                                                  backgroundColor: Colors.grey[800],
+                                                  backgroundColor: Color(0xff121212),
                                                     title: new Column(
                                                       mainAxisAlignment: MainAxisAlignment.start,
                                                       children: [
@@ -549,15 +575,23 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                             height: 60.0,
                                                             width: 60.0,
                                                             decoration: new BoxDecoration(
-                                                              color: Colors.grey[600], 
+                                                              color: Colors.grey[900], 
                                                               shape: BoxShape.circle,
                                                             ),
+                                                            child: ds['adminProfilephoto'] != null
+                                                            ? new ClipOval(
+                                                              child: new Image.network(ds['adminProfilephoto'], fit: BoxFit.cover),
+                                                            )
+                                                            : new Container(),
                                                           ),
                                                         ),
                                                         new Padding(
                                                           padding: EdgeInsets.only(top: 10.0),
                                                           child: new Center(
-                                                            child: new Text('Username',
+                                                            child: new Text(
+                                                              ds['adminUsername'] != null
+                                                              ? ds['adminUsername']
+                                                              : 'Username',
                                                             style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold)
                                                             ),
                                                           ),
@@ -566,16 +600,145 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                     ),
                                                     content: new Container(
                                                       height: 40.0,
-                                                      width: 60.0,
                                                       decoration: new BoxDecoration(
-                                                        color: Colors.orange,
+                                                        color: Colors.transparent,
                                                         borderRadius: new BorderRadius.circular(40.0),
                                                       ),
-                                                      child: new Center(
-                                                        child: new Text('SoundCloud',
-                                                        style: new TextStyle(color: Colors.black, fontSize: 12.0, fontWeight: FontWeight.bold)
-                                                        ),
-                                                      ),
+                                                      child: new Row(
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        children: [
+                                                          ds['adminSoundCloud'] != 'null'
+                                                          ? new InkWell(
+                                                            onTap: () async {
+                                                            if(await canLaunch(ds['adminSoundCloud'])) {
+                                                              await launch(ds['adminSoundCloud']);
+                                                            } else {
+                                                              print(ds['adminSoundCloud'] + ' error to launch');
+                                                            }
+                                                            },
+                                                          child: new Container(
+                                                              height: 40.0,
+                                                              width: 40.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(2.0),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/soundCloud.png', fit: BoxFit.cover)),
+                                                            )))
+                                                          : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 45.0,
+                                                              width: 45.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(2.0),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/spotify.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 40.0,
+                                                              width: 40.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(2.0),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/instagram.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 40.0,
+                                                              width: 40.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(2.0),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/youtube.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 48.0,
+                                                              width: 48.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(1.5),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/twitter.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 40.0,
+                                                              width: 40.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(2.0),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/twitch.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        
+                                                        //  ds['adminSoundCloud'] != null
+                                                         // ? 
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                          child: new Container(
+                                                              height: 48.0,
+                                                              width: 48.0,
+                                                              decoration: new BoxDecoration(
+                                                                color: Colors.black,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: new Padding(
+                                                                padding: EdgeInsets.all(0.5),
+                                                              child: new ClipOval(
+                                                                child: new Image.asset('web/icons/mixcloud.png', fit: BoxFit.cover)),
+                                                            ))),
+                                                        //  : new Container(),
+                                                        ],
+                                                      )
                                                     ),
                                                 ),
                                               );
@@ -904,7 +1067,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                       ),
                                     ),
                                     ),
-                                  ),
+                                  ),*/
                                 ],
                               ),
                             );

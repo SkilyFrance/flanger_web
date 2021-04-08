@@ -42,6 +42,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
  bool _searchingInProgress = false; 
 
   String _postIDSelected = '';
+   int listTileSelected;
   Stream<dynamic> fetchAllNotifcations() {
     setState(() {
       _searchingInProgress = true;
@@ -288,7 +289,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           new Container(
-                                          color: ds['alreadySeen'] == false ? Colors.deepPurpleAccent.withOpacity(0.2) : Colors.transparent,
+                                          color: listTileSelected == index ? Colors.grey[900].withOpacity(0.7) : Colors.transparent,
                                             child: new InkWell(
                                               splashColor: Colors.grey[900],
                                               highlightColor: Colors.grey[900],
@@ -324,6 +325,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                             onTap: () {
                                               setState(() {
                                                 _postIDSelected = ds['postID'];
+                                                listTileSelected = index;
                                                 _fetchPostsDatas = fetchPostsDatas(ds['postID']);
                                                 print('_postIDSelected = $_postIDSelected');
                                               });
@@ -356,7 +358,16 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                               style: new TextStyle(fontSize: 12.0, color: Colors.white, fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            trailing: new Icon(CupertinoIcons.chevron_right, color: Colors.grey[900])
+                                            trailing: ds['alreadySeen'] == false
+                                            ? new Container(
+                                              height: 10.0,
+                                              width: 10.0,
+                                              decoration: new BoxDecoration(
+                                                color: Colors.cyanAccent,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            )
+                                            : new Icon(CupertinoIcons.chevron_right, color: Colors.grey[900])
                                           ))),
                                           new Divider(height: 1.0, color: Colors.grey[900].withOpacity(0.8)),
                                         ],

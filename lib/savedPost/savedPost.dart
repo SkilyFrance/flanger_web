@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flanger_web_version/commentContainer.dart';
+import 'package:flanger_web_version/postContainer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -100,6 +101,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return new Scaffold(
       backgroundColor: Color(0xff121212),
         body: new Container(
@@ -289,7 +291,28 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                               child: new Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                              new InkWell(
+                                  new PostContainer(
+                                    comesFromHome: false,
+                                    currentUser: widget.currentUser,
+                                    currentUsername: widget.currentUserUsername,
+                                    currentUserphoto: widget.currentUserPhoto,
+                                    currentSoundCloud: currentSoundCloud,
+                                    listIsExpanded: listIsExpanded,
+                                    index: index,
+                                    listTextEditingController: listTextEditingController,
+                                    postID: ds['postID'],
+                                    typeOfPost: ds['typeOfPost'],
+                                    timestamp: ds['timestamp'],
+                                    adminUID: ds['adminUID'],
+                                    subject: ds['subject'],
+                                    body: ds['body'],
+                                    likes: ds['likes'],
+                                    comments: ds['comments'],
+                                    adminProfilephoto: ds['adminProfilephoto'],
+                                    adminUsername: ds['adminUsername'],
+                                    adminSoundCloud: ds['adminSoundCloud'],
+                                  ),
+                              /*new InkWell(
                                 onTap: () {
                                   if(listIsExpanded[index] == true) {
                                     setState(() {
@@ -688,7 +711,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                       ),
                                     ),
                                     ),
-                                  ),
+                                  ),*/
                                 ],
                               ),
                             );

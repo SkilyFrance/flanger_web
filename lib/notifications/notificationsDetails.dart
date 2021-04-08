@@ -117,12 +117,31 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                       color: Colors.transparent
                     ),
                   ),
-                      //adminProfilephoto
                       child: new Padding(
-                        padding: EdgeInsets.all(20.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 20.0),
                         child: new Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
+                          new Container(
+                            child: new Container(
+                              height: 12.0,
+                              width: MediaQuery.of(context).size.width,
+                              decoration: new BoxDecoration(
+                                color: 
+                                widget.snapshot.data['typeOfPost'] == 'issue' 
+                                ? Color(0xff7360FC)
+                                : widget.snapshot.data['typeOfPost'] == 'tip'
+                                ? Color(0xff62DDF9)
+                                : widget.snapshot.data['typeOfPost'] == 'project'
+                                ? Color(0xffBF88FF)
+                                : Color(0xff62DDF9),
+                                borderRadius: new BorderRadius.only(
+                                  topLeft: Radius.circular(10.0),
+                                  topRight: Radius.circular(10.0),
+                                ),
+                              ),
+                            ),
+                          ),
                           //adminProfilephoto
                           new ListTile(
                           contentPadding: EdgeInsets.all(20.0),
