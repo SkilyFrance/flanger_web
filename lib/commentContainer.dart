@@ -2,22 +2,42 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flanger_web_version/replyContainer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CommentContainer extends StatefulWidget {
 
   String currentUser;
-  String currentUsername;
-  String currentUserphoto;
-  String currentSoundcloud;
+  String currentUserUsername;
+  String currentUserPhoto;
+  String currentAboutMe;
+  String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
   String postID;
+  Map<dynamic, dynamic> reactedBy;
 
   CommentContainer({
     Key key,
-    this.currentUser,
-    this.currentUsername,
-    this.currentUserphoto,
-    this.currentSoundcloud,
+    this.currentUser, 
+    this.currentUserUsername,
+    this.currentUserPhoto,
+    this.currentAboutMe,
+    this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     this.postID,
+    this.reactedBy,
     }) : super(key: key);
 
 
@@ -29,10 +49,12 @@ class CommentContainer extends StatefulWidget {
 class CommentContainerState extends State<CommentContainer> {
 
 
+  bool _uploadInProgress = false;
+
   Stream<dynamic> _fetchAllComments;
   ScrollController _listCommentsScrollController = new ScrollController();
   List<TextEditingController> listTextEditingController = [];
-
+  List<FocusNode> listFocusNodeController = [];
   Stream<dynamic> fetchAllComments() {
     return FirebaseFirestore.instance
       .collection('posts')
@@ -126,6 +148,7 @@ class CommentContainerState extends State<CommentContainer> {
             itemBuilder: (BuildContext context, int index) {
               var ds = snapshot.data.docs[index];
               listTextEditingController.add(TextEditingController());
+              listFocusNodeController.add(FocusNode());
               return new Padding(
                 padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
                 child: new Container(
@@ -183,18 +206,26 @@ class CommentContainerState extends State<CommentContainer> {
                           ),
                         ),
                       subtitle: new Padding(
-                    padding: EdgeInsets.only(top: 5.0),
-                    child: new Text(
-                      ds['content'] != null
-                      ? ds['content'].toString()
-                      : '(Error on this message)',
-                      style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
-                      height: 1.5,
-                      letterSpacing: 1.1,
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: ds['content'] != null
+                        ? new Linkify(
+                            onOpen: (urlToOpen) async {
+                              if(await canLaunch(urlToOpen.url)) {
+                                await launch(urlToOpen.url);
+                              } else {
+                                print(urlToOpen.url + ' error to launch');
+                              }
+                            },
+                            text: ds['content'],
+                            textAlign: TextAlign.justify,
+                              style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
+                              height: 1.5,
+                              letterSpacing: 1.1,
+                              ),
+                            )
+                        : new Container(),
                       ),
-                    ),
-                    ),
-                    ),
+                      ),
                     //TextEditingController
                     new Padding(
                       padding: EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0, bottom: 10.0),
@@ -207,7 +238,8 @@ class CommentContainerState extends State<CommentContainer> {
                           color: Colors.grey[900],
                           borderRadius: new BorderRadius.circular(10.0),
                         ),
-                        child: new TextField(
+                        child: _uploadInProgress == false
+                        ? new TextField(
                           //textAlignVertical: TextAlignVertical.center,
                           textAlign: TextAlign.left,
                           style: new TextStyle(color: Colors.white, fontSize: 13.0),
@@ -216,14 +248,106 @@ class CommentContainerState extends State<CommentContainer> {
                           keyboardAppearance: Brightness.dark,
                           minLines: null,
                           maxLines: null,
+                          focusNode: listFocusNodeController[index],
                           controller: listTextEditingController[index],
                           cursorColor: Colors.white,
                           obscureText: false,
+                          onChanged: (value) {
+                            if(listTextEditingController[index].text.length > 0 && listTextEditingController[index].text.length == 1) {
+                              setState(() {});
+                            } else if (listTextEditingController[index].text.length == 0) {
+                              setState(() {});
+                            }
+                          },
                           decoration: new InputDecoration(
                             suffixIcon: new IconButton(
-                              icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: Colors.grey[600], size: 25.0),
+                              icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: listTextEditingController[index].text.length > 0 ? Colors.cyanAccent : Colors.grey[600], size: 25.0),
                               onPressed: () {
-
+                           if(listTextEditingController[index].text.length > 1 && listTextEditingController[index].value.text != '  ') {
+                            setState(() {
+                              _uploadInProgress = true;
+                            });
+                            widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
+                            int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+                            FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(widget.postID)
+                              .collection('comments')
+                              .doc(ds['timestamp'].toString()+ds['commentatorUsername'])
+                              .collection('reply')
+                              .doc(_timestampCreation.toString()+widget.currentUser)
+                              .set({
+                                'adminUID': ds['adminUID'],
+                                'commentatorUID': ds['commentatorUID'],
+                                'replierUID': widget.currentUser,
+                                'replierProfilephoto': widget.currentUserPhoto,
+                                'replierSoundCloud': widget.currentSoundCloud,
+                                'replierUsername': widget.currentUserUsername,
+                                'content': listTextEditingController[index].value.text,
+                                'postID': widget.postID,
+                                'subject': ds['subject'],
+                                'timestamp': _timestampCreation,
+                              }).whenComplete(() {
+                               listTextEditingController[index].clear();
+                               setState((){
+                                 _uploadInProgress = false;
+                                 });
+                                FirebaseFirestore.instance
+                                  .collection('posts')
+                                  .doc(widget.postID)
+                                  .update({
+                                    'comments': FieldValue.increment(1),
+                                    'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                    'reactedBy': widget.reactedBy,
+                                  }).whenComplete(() {
+                                    widget.reactedBy.forEach((key, value) {
+                                      if(key == widget.currentUser) {
+                                        print('No send notification here cause it is current user.');
+                                      } else if(key == ds['commentatorUID']) {
+                                        //Send another notif cause it's the commentator
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(key.toString())
+                                        .collection('notifications')
+                                        .doc(_timestampCreation.toString()+widget.currentUser)
+                                        .set({
+                                          'alreadySeen': false,
+                                          'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                          'body': 'has replied under your comment 💬',
+                                          'currentNotificationsToken': value.toString(),
+                                          'lastUserProfilephoto': widget.currentUserPhoto,
+                                          'lastUserUID': widget.currentUser,
+                                          'lastUserUsername': widget.currentUserUsername,
+                                          'postID': widget.postID,
+                                          'title': ds['subject'],
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore : notifications updated for $key');
+                                        });
+                                      } else {
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(key.toString())
+                                        .collection('notifications')
+                                        .doc(_timestampCreation.toString()+widget.currentUser)
+                                        .set({
+                                          'alreadySeen': false,
+                                          'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                          'body': 'has replied under a comment 💬',
+                                          'currentNotificationsToken': value.toString(),
+                                          'lastUserProfilephoto': widget.currentUserPhoto,
+                                          'lastUserUID': widget.currentUser,
+                                          'lastUserUsername': widget.currentUserUsername,
+                                          'postID': widget.postID,
+                                          'title': ds['subject'],
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore : notifications updated for $key');
+                                          listFocusNodeController[index].unfocus();
+                                        });
+                                      }
+                                    });
+                                  });
+                              });
+                            }
                               },
                             ),
                             contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
@@ -234,6 +358,25 @@ class CommentContainerState extends State<CommentContainer> {
                               fontSize: 15.0,
                             ),
                           ),
+                        )
+                        : new Container(
+                          child: new Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              new Text('Uploading in progress',
+                              style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                              ),
+                              new Padding(
+                                padding: EdgeInsets.only(left: 30.0),
+                                child: new Container(
+                                  height: 20.0,
+                                  width: 20.0,
+                                child: new CircularProgressIndicator(
+                                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                                )),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       ),
@@ -241,9 +384,17 @@ class CommentContainerState extends State<CommentContainer> {
                       padding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 20.0),
                       child: new ReplyContainer(
                         currentUser: widget.currentUser,
-                        currentUsername: widget.currentUsername,
-                        currentUserphoto: widget.currentUserphoto,
-                        currentSoundcloud: widget.currentSoundcloud,
+                        currentUserPhoto: widget.currentUserPhoto,
+                        currentUserUsername: widget.currentUserUsername,
+                        currentAboutMe: widget.currentAboutMe,
+                        currentSoundCloud: widget.currentSoundCloud,
+                        currentSpotify: widget.currentSpotify,
+                        currentInstagram: widget.currentInstagram,
+                        currentYoutube: widget.currentYoutube,
+                        currentTwitter: widget.currentTwitter,
+                        currentTwitch: widget.currentTwitch,
+                        currentMixcloud: widget.currentMixcloud,
+                        currentNotificationsToken: widget.currentNotificationsToken,
                         postID: widget.postID,
                         commentID: ds['timestamp'].toString()+ds['commentatorUsername'],
                       ),

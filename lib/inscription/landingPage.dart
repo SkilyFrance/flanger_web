@@ -1,4 +1,5 @@
 import 'package:flanger_web_version/inscription/sign.dart';
+import 'package:flanger_web_version/inscription/signIn.dart';
 import 'package:flutter/material.dart';
 
 class LandinPage extends StatefulWidget {
@@ -122,7 +123,7 @@ class LandinPageState extends State<LandinPage> {
       focusColor: Colors.transparent,
       onTap: () {
         Navigator.pushAndRemoveUntil(context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
-        new SignPage()), 
+        new SignInPage()), 
         (route) => false);
       },
     child: new Container(

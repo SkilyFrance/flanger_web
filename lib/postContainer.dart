@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flanger_web_version/requestList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:linkify/linkify.dart';
 import 'commentContainer.dart';
 
 
@@ -11,36 +13,70 @@ class PostContainer extends StatefulWidget {
 
   //CurrentUserDatas
   String currentUser;
-  String currentUsername;
-  String currentUserphoto;
+  String currentUserUsername;
+  String currentUserPhoto;
+  String currentAboutMe;
   String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
 
   //Post datas
   List<bool> listIsExpanded;
   int index;
   List<TextEditingController> listTextEditingController;
+  List<FocusNode> listFocusNodeController;
   String postID;
   String typeOfPost;
   int timestamp;
   String adminUID;
   String subject;
   String body;
+  //likes
   int likes;
+  List<dynamic> likedBy;
+  //fires
+  int fires;
+  List<dynamic> firedBy;
+  //rockets
+  int rockets;
+  List<dynamic> rocketedBy;
+  //comments
   int comments;
+  List<dynamic> commentedBy;
+  //reactedBy
+  Map<dynamic, dynamic> reactedBy;
+  //SavedBy
+  List<dynamic> savedBy;
+
+  //Admin
   String adminProfilephoto;
   String adminUsername;
-  String adminSoundCloud;
+  String adminNotificationsToken;
 
   PostContainer({
     Key key,
     this.comesFromHome,
-    this.currentUser,
-    this.currentUsername,
-    this.currentUserphoto,
+    this.currentUser, 
+    this.currentUserUsername,
+    this.currentUserPhoto,
+    this.currentAboutMe,
     this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     this.listIsExpanded,
     this.index,
     this.listTextEditingController,
+    this.listFocusNodeController,
     this.postID,
     this.typeOfPost,
     this.timestamp,
@@ -48,10 +84,18 @@ class PostContainer extends StatefulWidget {
     this.subject,
     this.body,
     this.likes,
+    this.likedBy,
+    this.fires,
+    this.firedBy,
+    this.rockets,
+    this.rocketedBy,
     this.comments,
+    this.commentedBy,
+    this.reactedBy,
+    this.savedBy,
     this.adminProfilephoto,
     this.adminUsername,
-    this.adminSoundCloud,
+    this.adminNotificationsToken,
     }) : super(key: key);
 
 
@@ -63,6 +107,8 @@ class PostContainer extends StatefulWidget {
 class PostContainerState extends State<PostContainer> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
+  bool _uploadInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +174,27 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     context: context,
                     builder: (_) => new AlertDialog(
                       backgroundColor: Color(0xff121212),
-                        title: new Column(
+                      title: new FutureBuilder(
+                        future: FirebaseFirestore.instance.collection('users').doc(widget.adminUID).get(),
+                        builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                          if(snapshot.hasError || !snapshot.hasData) {
+                            return new Container(
+                              height: 300.0,
+                              width: 300.0,
+                              child: new Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  new Text('',
+                                  style: new TextStyle(color: Colors.grey[600], fontSize: 17.0, fontWeight: FontWeight.normal),
+                                  ),
+                                  new CircularProgressIndicator(
+                                    valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent)
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return new Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             new Center(
@@ -157,9 +223,38 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                 ),
                               ),
                               ),
-                          ],
-                        ),
-                        content: new Container(
+                              snapshot.data['aboutMe'] != 'null' && snapshot.data['aboutMe'] != null
+                              ? new Padding(
+                                padding: EdgeInsets.only(top: 30.0),
+                                child: new Container(
+                                  width: 350.0,
+                                  child: new Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      new Center(
+                                        child: new Text('About me',
+                                        style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      new Padding(
+                                        padding: EdgeInsets.only(top: 20.0),
+                                        child: new Text(snapshot.data['aboutMe'],
+                                        textAlign: TextAlign.justify,
+                                        style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal,
+                                        wordSpacing: 1.0,
+                                        letterSpacing: 1.0,
+                                        height: 1.0,
+                                        ),
+                                        ),
+                                        ),
+                                    ],
+                                  )
+                                ),
+                              )
+                              : new Container(),
+                       new Padding(
+                         padding: EdgeInsets.only(top: 30.0),
+                       child: new Container(
                           height: 40.0,
                           decoration: new BoxDecoration(
                             color: Colors.transparent,
@@ -168,13 +263,13 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           child: new Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              widget.adminSoundCloud != 'null'
+                              snapshot.data['soundCloud'] != 'null'
                               ? new InkWell(
                                 onTap: () async {
-                                if(await canLaunch(widget.adminSoundCloud)) {
-                                  await launch(widget.adminSoundCloud);
+                                if(await canLaunch(snapshot.data['soundCloud'])) {
+                                  await launch(snapshot.data['soundCloud']);
                                 } else {
-                                  print(widget.adminSoundCloud + ' error to launch');
+                                  print(snapshot.data['soundCloud'] + ' error to launch');
                                 }
                                 },
                               child: new Container(
@@ -190,11 +285,16 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     child: new Image.asset('web/icons/soundCloud.png', fit: BoxFit.cover)),
                                 )))
                               : new Container(),
-                            
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+
+                              snapshot.data['spotify'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['spotify'])) {
+                                  await launch(snapshot.data['spotify']);
+                                } else {
+                                  print(snapshot.data['spotify'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 45.0,
                                   width: 45.0,
@@ -206,13 +306,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(2.0),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/spotify.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
+                                )))
+                              : new Container(),
                             
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+                              snapshot.data['instagram'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['instagram'])) {
+                                  await launch(snapshot.data['instagram']);
+                                } else {
+                                  print(snapshot.data['instagram'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 40.0,
                                   width: 40.0,
@@ -224,13 +329,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(2.0),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/instagram.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
+                                )))
+                              : new Container(),
                             
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+                              snapshot.data['youtube'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['youtube'])) {
+                                  await launch(snapshot.data['youtube']);
+                                } else {
+                                  print(snapshot.data['youtube'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 40.0,
                                   width: 40.0,
@@ -242,13 +352,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(2.0),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/youtube.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
+                                )))
+                              : new Container(),
                             
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+                              snapshot.data['twitter'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['twitter'])) {
+                                  await launch(snapshot.data['twitter']);
+                                } else {
+                                  print(snapshot.data['twitter'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 48.0,
                                   width: 48.0,
@@ -260,13 +375,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(1.5),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/twitter.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
-                            
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+                                )))
+                              : new Container(),
+
+                              snapshot.data['twitch'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['twitch'])) {
+                                  await launch(snapshot.data['twitch']);
+                                } else {
+                                  print(snapshot.data['twitch'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 40.0,
                                   width: 40.0,
@@ -278,13 +398,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(2.0),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/twitch.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
+                                )))
+                              : new Container(),
                             
-                            //  ds['adminSoundCloud'] != null
-                              // ? 
-                              new Padding(
-                                padding: EdgeInsets.only(left: 10.0),
+                             snapshot.data['mixcloud'] != 'null'
+                              ? new InkWell(
+                                onTap: () async {
+                                if(await canLaunch(snapshot.data['mixcloud'])) {
+                                  await launch(snapshot.data['mixcloud']);
+                                } else {
+                                  print(snapshot.data['mixcloud'] + ' error to launch');
+                                }
+                                },
                               child: new Container(
                                   height: 48.0,
                                   width: 48.0,
@@ -296,11 +421,17 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     padding: EdgeInsets.all(0.5),
                                   child: new ClipOval(
                                     child: new Image.asset('web/icons/mixcloud.png', fit: BoxFit.cover)),
-                                ))),
-                            //  : new Container(),
+                                )))
+                              : new Container(),
+
                             ],
                           )
                         ),
+                       ),
+                        ],
+                        );
+
+                        })
                     ),
                   );
                 },
@@ -317,7 +448,13 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                 )
                 : new Container()
               )),
-              title: new RichText(
+              title: new Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+              new Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+              new RichText(
               textAlign: TextAlign.justify,
               text: new TextSpan(
                 text: widget.adminUsername != null
@@ -345,49 +482,44 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   ],
                 ),
               ),
-            subtitle: new Padding(
-            padding: EdgeInsets.only(top: 5.0),
-            child: new Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                new Text(widget.subject != null
-              ? widget.subject + ' -'
-              : '(error on this title)',
-              style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
-              height: 1.1,
-              ),
-              ),
-              new Padding(
-                padding: EdgeInsets.only(top: 5.0),
-            
-
-                
-              ),
-              ],
-            ),
-            /*child: new RichText(
-              textAlign: TextAlign.justify,
-            text: new TextSpan(
-              text: widget.subject != null
-              ? widget.subject + ' -'
-              : '(error on this title)',
-              style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
-              height: 1.1,
-              ),
-              children: [
-                new TextSpan(
-                  text: widget.body != null
-                  ? '  ' + widget.body
-                  : '   ' + ' (Error on this message)',
-                  style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
-                  height: 1.5,
-                  letterSpacing: 1.1,
-                  ),
-                  ),
                 ],
               ),
-            ),*/
-            ),
+                new Row(
+                 mainAxisAlignment: MainAxisAlignment.start,
+                 children: [
+                  new Padding(
+                    padding: EdgeInsets.only(top: 10.0),
+                  child: new Text(widget.subject != null
+                  ? widget.subject
+                  : '(error on this title)',
+                  style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
+                  height: 1.1,
+                  ),
+                  )),
+                 ],
+                ),
+                ],
+              ),
+            subtitle: new Padding(
+                  padding: EdgeInsets.only(top: 10.0),
+                  child: widget.body != null
+                  ? new Linkify(
+                      onOpen: (urlToOpen) async {
+                        if(await canLaunch(urlToOpen.url)) {
+                          await launch(urlToOpen.url);
+                        } else {
+                          print(urlToOpen.url + ' error to launch');
+                        }
+                      },
+                      text: widget.body,
+                      textAlign: TextAlign.justify,
+                        style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
+                        height: 1.5,
+                        letterSpacing: 1.1,
+                        ),
+                      )
+                  : new Container(),
+                ),
               trailing: new Material(
                 color: Colors.transparent,
                 child: new PopupMenuButton(
@@ -459,13 +591,30 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                 children: [
                   new InkWell(
                     onTap: () {
-
+                      if(widget.likedBy.contains(widget.currentUser)) {
+                      deletelikeRequest(
+                        widget.postID, 
+                        widget.likes, 
+                        widget.currentUser, 
+                        widget.likedBy);
+                      } else {
+                      likeRequest(
+                      widget.postID, 
+                      widget.likes,
+                      widget.subject, 
+                      widget.currentUser, 
+                      widget.currentUserUsername,
+                      widget.likedBy,
+                      widget.adminUID,
+                      widget.adminNotificationsToken,
+                      widget.currentUserPhoto);
+                      }
                     },
                   child: new Container(
                     height: 30.0,
                     width: 55.0,
                     decoration: new BoxDecoration(
-                      color: Colors.purpleAccent.withOpacity(0.2), //Colors.grey[800].withOpacity(0.6),
+                      color: widget.likedBy.contains(widget.currentUser) ?  Colors.purpleAccent.withOpacity(0.2) : Colors.grey[800].withOpacity(0.6),
                       borderRadius: new BorderRadius.circular(3.0)
                     ),
                     child: new Row(
@@ -486,37 +635,30 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   ),
                   new InkWell(
                     onTap: () {
-
+                      if(widget.firedBy.contains(widget.currentUser)) {
+                        deleteFireRequest(
+                          widget.postID, 
+                          widget.fires, 
+                          widget.currentUser, 
+                          widget.firedBy);
+                      } else {
+                        fireRequest(
+                          widget.postID, 
+                          widget.fires, 
+                          widget.subject, 
+                          widget.currentUser, 
+                          widget.currentUserUsername, 
+                          widget.firedBy, 
+                          widget.adminUID, 
+                          widget.adminNotificationsToken, 
+                          widget.currentUserPhoto);
+                      }
                     },
                   child: new Container(
                     height: 30.0,
                     width: 55.0,
                     decoration: new BoxDecoration(
-                      color: Colors.grey[800].withOpacity(0.6),
-                      borderRadius: new BorderRadius.circular(3.0)
-                    ),
-                    child: new Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        new Text('🥳',
-                        style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                        ),
-                        new Text('0',
-                        style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ),
-                  new InkWell(
-                    onTap: () {
-
-                    },
-                  child: new Container(
-                    height: 30.0,
-                    width: 55.0,
-                    decoration: new BoxDecoration(
-                      color: Colors.grey[800].withOpacity(0.6),
+                      color: widget.firedBy.contains(widget.currentUser) ?  Colors.purpleAccent.withOpacity(0.2) : Colors.grey[800].withOpacity(0.6),
                       borderRadius: new BorderRadius.circular(3.0)
                     ),
                     child: new Row(
@@ -525,7 +667,10 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                         new Text('🔥',
                         style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
                         ),
-                        new Text('0',
+                        new Text(
+                          widget.fires != null
+                          ? widget.fires.toString()
+                          : ' ',
                         style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -534,13 +679,30 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   ),
                   new InkWell(
                     onTap: () {
-
+                      if(widget.rocketedBy.contains(widget.currentUser)) {
+                        deleteRocketRequest(
+                          widget.postID, 
+                          widget.rockets, 
+                          widget.currentUser, 
+                          widget.rocketedBy);
+                      } else {
+                        rocketRequest(
+                          widget.postID, 
+                          widget.rockets, 
+                          widget.subject, 
+                          widget.currentUser, 
+                          widget.currentUserUsername, 
+                          widget.rocketedBy, 
+                          widget.adminUID, 
+                          widget.adminNotificationsToken, 
+                          widget.currentUserPhoto);
+                      }
                     },
                   child: new Container(
                     height: 30.0,
                     width: 55.0,
                     decoration: new BoxDecoration(
-                      color: Colors.grey[800].withOpacity(0.6),
+                      color: widget.rocketedBy.contains(widget.currentUser) ?  Colors.purpleAccent.withOpacity(0.2) : Colors.grey[800].withOpacity(0.6),
                       borderRadius: new BorderRadius.circular(3.0)
                     ),
                     child: new Row(
@@ -549,7 +711,10 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                         new Text('🚀',
                         style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
                         ),
-                        new Text('0',
+                        new Text(
+                          widget.rockets != null
+                          ? widget.rockets.toString()
+                          : ' ',
                         style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -588,7 +753,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
               ),
             ),
             //TextEditingController
-            new Padding(
+             new Padding(
               padding: EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0, bottom: 10.0),
               child: new Container(
                 constraints: new BoxConstraints(
@@ -599,13 +764,22 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   color: Colors.grey[900],
                   borderRadius: new BorderRadius.circular(10.0),
                 ),
-                child: new TextField(
+                child: _uploadInProgress == false
+                ? new TextField(
+                  focusNode: widget.listFocusNodeController[widget.index],
                   showCursor: true,
                   //textAlignVertical: TextAlignVertical.center,
                   textAlign: TextAlign.left,
                   style: new TextStyle(color: Colors.white, fontSize: 13.0),
                   keyboardType: TextInputType.multiline,
                   scrollPhysics: new ScrollPhysics(),
+                  onChanged: (value) {
+                    if(widget.listTextEditingController[widget.index].text.length > 0 && widget.listTextEditingController[widget.index].text.length == 1) {
+                      setState(() {});
+                    } else if (widget.listTextEditingController[widget.index].text.length == 0) {
+                      setState(() {});
+                    }
+                  },
                   keyboardAppearance: Brightness.dark,
                   minLines: null,
                   maxLines: null,
@@ -614,9 +788,70 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   obscureText: false,
                   decoration: new InputDecoration(
                     suffixIcon: new IconButton(
-                      icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: Colors.grey[600], size: 25.0),
+                      icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: widget.listTextEditingController[widget.index].text.length > 0 ? Colors.cyanAccent :  Colors.grey[600], size: 25.0),
                       onPressed: () {
-
+                            if(widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
+                            setState(() {
+                              _uploadInProgress = true;
+                            });
+                            widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
+                            int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+                            FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(widget.postID)
+                              .collection('comments')
+                              .doc('$_timestampCreation${widget.currentUserUsername}')
+                              .set({
+                                'adminUID': widget.adminUID,
+                                'commentatorProfilephoto': widget.currentUserPhoto,
+                                'commentatorSoundCloud': widget.currentSoundCloud,
+                                'commentatorUID': widget.currentUser,
+                                'commentatorUsername': widget.currentUserUsername,
+                                'content': widget.listTextEditingController[widget.index].value.text,
+                                'postID': widget.postID,
+                                'subject': widget.subject,
+                                'timestamp': _timestampCreation,
+                              }).whenComplete(() {
+                               widget.listTextEditingController[widget.index].clear();
+                               setState((){
+                                 _uploadInProgress = false;
+                                 });
+                                FirebaseFirestore.instance
+                                  .collection('posts')
+                                  .doc(widget.postID)
+                                  .update({
+                                    'comments': FieldValue.increment(1),
+                                    'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                    'reactedBy': widget.reactedBy,
+                                  }).whenComplete(() {
+                                    widget.reactedBy.forEach((key, value) {
+                                      if(key == widget.currentUser) {
+                                        print('No send notification here cause it is current user.');
+                                      } else {
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(key.toString())
+                                        .collection('notifications')
+                                        .doc(_timestampCreation.toString()+widget.currentUser)
+                                        .set({
+                                          'alreadySeen': false,
+                                          'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                          'body': 'has commented this post 💬',
+                                          'currentNotificationsToken': value.toString(),
+                                          'lastUserProfilephoto': widget.currentUserPhoto,
+                                          'lastUserUID': widget.currentUser,
+                                          'lastUserUsername': widget.currentUserUsername,
+                                          'postID': widget.postID,
+                                          'title': widget.subject,
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore : notifications updated for $key');
+                                          widget.listFocusNodeController[widget.index].unfocus();
+                                        });
+                                      }
+                                    });
+                                  });
+                              });
+                            }
                       },
                     ),
                     contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
@@ -627,17 +862,45 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                       fontSize: 15.0,
                     ),
                   ),
+                )
+                : new Container(
+                  child: new Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      new Text('Uploading in progress',
+                      style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                      ),
+                      new Padding(
+                        padding: EdgeInsets.only(left: 30.0),
+                        child: new Container(
+                          height: 20.0,
+                          width: 20.0,
+                        child: new CircularProgressIndicator(
+                          valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                        )),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               ),
               new Padding(
                 padding: EdgeInsets.only(top: 30.0, left: 50.0, right: 50.0),
                 child: widget.listIsExpanded[widget.index] == true ? new CommentContainer(
-                  currentUser: widget.currentUser,
-                  currentUsername: widget.currentUsername,
-                  currentUserphoto: widget.currentUserphoto,
-                  currentSoundcloud: widget.currentSoundCloud,
-                  postID: widget.postID,
+                 currentUser: widget.currentUser,
+                 currentUserPhoto: widget.currentUserPhoto,
+                 currentUserUsername: widget.currentUserUsername,
+                 currentAboutMe: widget.currentAboutMe,
+                 currentSoundCloud: widget.currentSoundCloud,
+                 currentSpotify: widget.currentSpotify,
+                 currentInstagram: widget.currentInstagram,
+                 currentYoutube: widget.currentYoutube,
+                 currentTwitter: widget.currentTwitter,
+                 currentTwitch: widget.currentTwitch,
+                 currentMixcloud: widget.currentMixcloud,
+                 currentNotificationsToken: widget.currentNotificationsToken,
+                 postID: widget.postID,
+                 reactedBy: widget.reactedBy,
                 )
                 : new Container(),
               ),

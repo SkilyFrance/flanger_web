@@ -15,41 +15,54 @@ class SplashPage extends StatefulWidget {
   _SplashPageState createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage>  {
 
   @override
   void initState() {
-    SchedulerBinding.instance.addPostFrameCallback((_) { 
-    User user = FirebaseAuth.instance.currentUser;
-    if(user == null) {
-      print('no user recognize');
-      Navigator.pushReplacement(context, new PageRouteBuilder(pageBuilder: (_,__,___) => new LandinPage()));
-    } else {
-      FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get()
-        .then((value) {
-          if(value.exists) {
-            Navigator.pushReplacement(context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
-            new MainViewPage(
-              currentUser: user.uid,
-              currentUserUsername: value.data()['username'],
-              currentUserPhoto: value.data()['profilePhoto'],
-              notificationsToken: value.data()['notificationsToken'],
-              )));
-          } else {
-            //Value No exist
-            Navigator.pushReplacement(
-              context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
-              new UsernamePage(
-                currentUser: user.uid, 
-                currentUserEmail: user.email)));
-          }
-        }).catchError((error) => print(error));
-    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+    //User user = FirebaseAuth.instance.currentUser;
+    FirebaseAuth.instance
+      .idTokenChanges()
+      .listen((event) {
+        if(this.mounted) {
+        if(event != null) {
+          event.getIdToken().then((token) => print('The user ID token is' + token));
+          //User user = FirebaseAuth.instance.currentUser;
+          FirebaseFirestore.instance
+            .collection('users')
+            .doc(event.uid)
+            .get()
+            .then((value) {
+              if(value.exists) {
+                Navigator.pushReplacement(context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
+                new MainViewPage(
+                  currentUser: event.uid,
+                  currentUserUsername: value.data()['username'],
+                  currentUserPhoto: value.data()['profilePhoto'],
+                  notificationsToken: value.data()['notificationsToken'],
+                  )));
+              } else {
+                //Value No exist
+                Navigator.pushReplacement(
+                  context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
+                  new UsernamePage(
+                    currentUser: event.uid, 
+                    currentUserEmail: event.email)));
+              }
+            }).catchError((error) => print(error));
+        } else {
+          print('User is currently signed out');
+          print('no user recognize');
+          Navigator.pushReplacement(context, new PageRouteBuilder(pageBuilder: (_,__,___) => new LandinPage()));
+        }
+      }
+      });
     });
     super.initState();
+  }
+ 
+  checkIfLogged() async {
+
   }
 
   @override

@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flanger_web_version/commentContainer.dart';
 import 'package:flanger_web_version/postContainer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +11,15 @@ class SavedPostPage extends StatefulWidget {
   String currentUser;
   String currentUserUsername;
   String currentUserPhoto;
-  String notificationsToken;
+  String currentAboutMe;
+  String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
 
 
   SavedPostPage({
@@ -21,7 +27,15 @@ class SavedPostPage extends StatefulWidget {
     this.currentUser, 
     this.currentUserUsername,
     this.currentUserPhoto,
-    this.notificationsToken,
+    this.currentAboutMe,
+    this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     }) : super(key: key);
 
 
@@ -294,9 +308,17 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                   new PostContainer(
                                     comesFromHome: false,
                                     currentUser: widget.currentUser,
-                                    currentUsername: widget.currentUserUsername,
-                                    currentUserphoto: widget.currentUserPhoto,
-                                    currentSoundCloud: currentSoundCloud,
+                                    currentUserPhoto: widget.currentUserPhoto,
+                                    currentUserUsername: widget.currentUserUsername,
+                                    currentAboutMe: widget.currentAboutMe,
+                                    currentSoundCloud: widget.currentSoundCloud,
+                                    currentSpotify: widget.currentSpotify,
+                                    currentInstagram: widget.currentInstagram,
+                                    currentYoutube: widget.currentYoutube,
+                                    currentTwitter: widget.currentTwitter,
+                                    currentTwitch: widget.currentTwitch,
+                                    currentMixcloud: widget.currentMixcloud,
+                                    currentNotificationsToken: widget.currentNotificationsToken,
                                     listIsExpanded: listIsExpanded,
                                     index: index,
                                     listTextEditingController: listTextEditingController,
@@ -310,408 +332,8 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     comments: ds['comments'],
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
-                                    adminSoundCloud: ds['adminSoundCloud'],
+                       
                                   ),
-                              /*new InkWell(
-                                onTap: () {
-                                  if(listIsExpanded[index] == true) {
-                                    setState(() {
-                                      listIsExpanded[index] = false;
-                                    });
-                                  } else {
-                                    setState(() {
-                                        listIsExpanded[index] = true;
-                                      });
-                                  }
-                                },
-                              child: new Container(
-                                decoration: new BoxDecoration(
-                                  color: Colors.grey[900].withOpacity(0.5),
-                                  borderRadius: new BorderRadius.circular(10.0),
-                                  border: new Border.all(
-                                    width: 1.0,
-                                    color: listIsExpanded[index] == true ? Colors.purpleAccent : Colors.transparent
-                                  ),
-                                ),
-                                    //adminProfilephoto
-                                    child: new Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: new Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                        //adminProfilephoto
-                                        new ListTile(
-                                        contentPadding: EdgeInsets.all(20.0),
-                                          leading: new InkWell(
-                                            onTap: () {
-                                            showDialog(
-                                                context: context,
-                                                builder: (_) => new AlertDialog(
-                                                  backgroundColor: Colors.grey[800],
-                                                    title: new Column(
-                                                      mainAxisAlignment: MainAxisAlignment.start,
-                                                      children: [
-                                                        new Center(
-                                                          child: new Container(
-                                                            height: 60.0,
-                                                            width: 60.0,
-                                                            decoration: new BoxDecoration(
-                                                              color: Colors.grey[600], 
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        new Padding(
-                                                          padding: EdgeInsets.only(top: 10.0),
-                                                          child: new Center(
-                                                            child: new Text('Username',
-                                                            style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold)
-                                                            ),
-                                                          ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                    content: new Container(
-                                                      height: 40.0,
-                                                      width: 60.0,
-                                                      decoration: new BoxDecoration(
-                                                        color: Colors.orange,
-                                                        borderRadius: new BorderRadius.circular(40.0),
-                                                      ),
-                                                      child: new Center(
-                                                        child: new Text('SoundCloud',
-                                                        style: new TextStyle(color: Colors.black, fontSize: 12.0, fontWeight: FontWeight.bold)
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ),
-                                              );
-                                            },
-                                            child: new Container(
-                                            height: 30.0,
-                                            width: 30.0,
-                                            decoration: new BoxDecoration(
-                                              color: Colors.grey[600],
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: ds['adminProfilephoto'] != null
-                                            ? new ClipOval(
-                                              child: new Image.network(ds['adminProfilephoto'], fit: BoxFit.cover),
-                                            )
-                                            : new Container()
-                                          )),
-                                          title: new RichText(
-                                          textAlign: TextAlign.justify,
-                                          text: new TextSpan(
-                                            text: ds['adminUsername'] != null
-                                            ? ds['adminUsername'] + ' -  '
-                                            : 'Unknown' + ' -  ',
-                                            style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
-                                            height: 1.1,
-                                            ),
-                                            children: [
-                                              new TextSpan(
-                                                text:  ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inMinutes < 1
-                                                ? 'few sec ago'
-                                                : ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inMinutes < 60
-                                                ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inMinutes.toString() + ' min ago'
-                                                : ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inMinutes >= 60
-                                                && ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inHours <= 24
-                                                ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inHours.toString() + ' hours ago'
-                                                : ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inHours >= 24
-                                                ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inDays.toString() + ' days ago'
-                                                : '',
-                                                style:  new TextStyle(color: Colors.grey, fontSize: 12.0, fontWeight: FontWeight.normal,
-                                                height: 1.1,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          subtitle: new Padding(
-                                        padding: EdgeInsets.only(top: 5.0),
-                                        child: new RichText(
-                                          textAlign: TextAlign.justify,
-                                        text: new TextSpan(
-                                          text: ds['subject'] != null
-                                          ? ds['subject'] + ' -'
-                                          : '(error on this title)',
-                                          style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
-                                          height: 1.1,
-                                          ),
-                                          children: [
-                                            new TextSpan(
-                                              text: ds['body'] != null
-                                              ? '  ' + ds['body']
-                                              : '   ' + ' (Error on this message)',
-                                              style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
-                                              height: 1.5,
-                                              letterSpacing: 1.1,
-                                              ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        ),
-                                          trailing: new Material(
-                                            color: Colors.transparent,
-                                            child: new PopupMenuButton(
-                                              child: new Icon(Icons.more_horiz_rounded, color: Colors.white, size: 20.0),
-                                              color: Colors.grey[400],
-                                              shape: new RoundedRectangleBorder(
-                                                borderRadius: new BorderRadius.circular(5.0)
-                                              ),
-                                              onSelected: (selectedValue) {
-                                                print(selectedValue);
-                                              },
-                                              itemBuilder: (BuildContext ctx) => [
-                                               new PopupMenuItem(
-                                                 child: new Row(
-                                                   children: [
-                                                     new Text('Remove'),
-                                                     new Padding(padding: EdgeInsets.only(left: 5.0),
-                                                     child: new Icon(CupertinoIcons.trash))]
-                                                     ), value: '1'),
-                                                     //2
-                                               new PopupMenuItem(
-                                                 child: new Row(
-                                                   children: [
-                                                     new Text('Report'),
-                                                     new Padding(padding: EdgeInsets.only(left: 5.0),
-                                                     child: new Icon(CupertinoIcons.tag))]
-                                                     ), value: '2')]
-                                            ),
-                                          ),
-                                          /*new Container(
-                                            height: 30.0,
-                                            width: 80.0,
-                                          child: new Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              new Padding(
-                                                padding: EdgeInsets.only(left: 0.0),
-                                                child: 
-                                                ds['typeOfPost'] == 'issue'
-                                                ? new Icon(CupertinoIcons.burst, color: Colors.deepPurpleAccent, size: 20.0)
-                                                : ds['typeOfPost'] == 'tip'
-                                                ? new Icon(CupertinoIcons.lightbulb, color: Colors.purpleAccent, size: 20.0)
-                                                : new Icon(CupertinoIcons.rocket, color: Colors.cyanAccent, size: 20.0)
-                                                ),
-                                              new Padding(
-                                                padding: EdgeInsets.only(left: 5.0),
-                                              child: new Text(
-                                                ds['typeOfPost'] == 'issue' 
-                                                ? 'Issue'
-                                                : ds['typeOfPost'] == 'tip'
-                                                ? 'Tip'
-                                                : 'Project',
-                                                style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal))),
-                                            ],
-                                          ),
-                                          ),*/
-                                        ),
-                                        new Padding(
-                                          padding: EdgeInsets.only(left: 30.0),
-                                          child: new Row(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            children: [
-                                        new Container(
-                                          height: 30.0,
-                                          width: 250.0,
-                                          color: Colors.transparent,
-                                          child: new Center(
-                                          child: new Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              new InkWell(
-                                                onTap: () {
-
-                                                },
-                                              child: new Container(
-                                                height: 30.0,
-                                                width: 55.0,
-                                                decoration: new BoxDecoration(
-                                                  color: Colors.purpleAccent.withOpacity(0.2), //Colors.grey[800].withOpacity(0.6),
-                                                  borderRadius: new BorderRadius.circular(3.0)
-                                                ),
-                                                child: new Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    new Text('👍',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                    new Text(
-                                                      ds['likes'] != null
-                                                      ? ds['likes'].toString()
-                                                      : ' ',
-                                                      style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              ),
-                                              new InkWell(
-                                                onTap: () {
-
-                                                },
-                                              child: new Container(
-                                                height: 30.0,
-                                                width: 55.0,
-                                                decoration: new BoxDecoration(
-                                                  color: Colors.grey[800].withOpacity(0.6),
-                                                  borderRadius: new BorderRadius.circular(3.0)
-                                                ),
-                                                child: new Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    new Text('🥳',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                    new Text('0',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              ),
-                                              new InkWell(
-                                                onTap: () {
-
-                                                },
-                                              child: new Container(
-                                                height: 30.0,
-                                                width: 55.0,
-                                                decoration: new BoxDecoration(
-                                                  color: Colors.grey[800].withOpacity(0.6),
-                                                  borderRadius: new BorderRadius.circular(3.0)
-                                                ),
-                                                child: new Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    new Text('🔥',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                    new Text('0',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              ),
-                                              new InkWell(
-                                                onTap: () {
-
-                                                },
-                                              child: new Container(
-                                                height: 30.0,
-                                                width: 55.0,
-                                                decoration: new BoxDecoration(
-                                                  color: Colors.grey[800].withOpacity(0.6),
-                                                  borderRadius: new BorderRadius.circular(3.0)
-                                                ),
-                                                child: new Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    new Text('🚀',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                    new Text('0',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              ),
-                                            ],
-                                          ),
-                                          ),
-                                        ),
-                                        new Padding(
-                                          padding: EdgeInsets.only(left: 20.0),
-                                          child: new Container(
-                                                height: 30.0,
-                                                width: 55.0,
-                                                decoration: new BoxDecoration(
-                                                  borderRadius: new BorderRadius.circular(3.0)
-                                                ),
-                                                child: new Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    new Text('💬',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                    new Text(
-                                                      ds['comments'] != null
-                                                      ? ds['comments'].toString()
-                                                      : ' ',
-                                                    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                          ),
-                                          ],
-                                          ),
-                                        ),
-                                        //TextEditingController
-                                        new Padding(
-                                          padding: EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0, bottom: 10.0),
-                                          child: new Container(
-                                            constraints: new BoxConstraints(
-                                              minHeight: 50.0,
-                                              maxHeight: 150.0
-                                            ),
-                                            decoration: new BoxDecoration(
-                                              color: Colors.grey[900],
-                                              borderRadius: new BorderRadius.circular(10.0),
-                                            ),
-                                            child: new TextField(
-                                              showCursor: true,
-                                              //textAlignVertical: TextAlignVertical.center,
-                                              textAlign: TextAlign.left,
-                                              style: new TextStyle(color: Colors.white, fontSize: 13.0),
-                                              keyboardType: TextInputType.multiline,
-                                              scrollPhysics: new ScrollPhysics(),
-                                              keyboardAppearance: Brightness.dark,
-                                              minLines: null,
-                                              maxLines: null,
-                                              controller: listTextEditingController[index],
-                                              cursorColor: Colors.white,
-                                              obscureText: false,
-                                              decoration: new InputDecoration(
-                                                suffixIcon: new IconButton(
-                                                  icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: Colors.grey[600], size: 25.0),
-                                                  onPressed: () {
-
-                                                  },
-                                                ),
-                                                contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-                                                border: InputBorder.none,
-                                                hintText: 'Aa',
-                                                hintStyle: new TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 15.0,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          ),
-                                          new Padding(
-                                            padding: EdgeInsets.only(top: 30.0, left: 50.0, right: 50.0),
-                                            child: listIsExpanded[index] == true ? new CommentContainer(
-                                              currentUser: widget.currentUser,
-                                              currentUsername: widget.currentUserUsername,
-                                              currentUserphoto: widget.currentUserPhoto,
-                                              currentSoundcloud: currentSoundCloud,
-                                              postID: ds['postID'],
-                                            )
-                                            : new Container(),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    ),
-                                  ),*/
                                 ],
                               ),
                             );

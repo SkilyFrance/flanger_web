@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flanger_web_version/commentContainer.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class NotificationsDetails extends StatefulWidget {
@@ -10,13 +12,31 @@ class NotificationsDetails extends StatefulWidget {
   String currentUser;
   String currentUserUsername;
   String currentUserPhoto;
+  String currentAboutMe;
+  String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
   AsyncSnapshot<dynamic> snapshot;
 
   NotificationsDetails({
     Key key,
-    this.currentUser,
-    this.currentUserPhoto,
+    this.currentUser, 
     this.currentUserUsername,
+    this.currentUserPhoto,
+    this.currentAboutMe,
+    this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     this.snapshot,
     }) : super(key: key);
 
@@ -203,7 +223,13 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                               )
                               : new Container()
                             )),
-                            title: new RichText(
+                            title: new Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                            new Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                            new RichText(
                             textAlign: TextAlign.justify,
                             text: new TextSpan(
                               text: widget.snapshot.data['adminUsername'] != null
@@ -214,7 +240,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                               ),
                               children: [
                                 new TextSpan(
-                                  text:  widget.snapshot.data['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(widget.snapshot.data['timestamp'])).inMinutes < 1
+                                  text: widget.snapshot.data['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(widget.snapshot.data['timestamp'])).inMinutes < 1
                                   ? 'few sec ago'
                                   : widget.snapshot.data['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(widget.snapshot.data['timestamp'])).inMinutes < 60
                                   ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(widget.snapshot.data['timestamp'])).inMinutes.toString() + ' min ago'
@@ -231,30 +257,43 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                                 ],
                               ),
                             ),
-                            subtitle: new Padding(
-                          padding: EdgeInsets.only(top: 5.0),
-                          child: new RichText(
-                            textAlign: TextAlign.justify,
-                          text: new TextSpan(
-                            text: widget.snapshot.data['subject'] != null
-                            ? widget.snapshot.data['subject'] + ' -'
-                            : '(error on this title)',
-                            style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
-                            height: 1.1,
-                            ),
-                            children: [
-                              new TextSpan(
-                                text: widget.snapshot.data['body'] != null
-                                ? '  ' + widget.snapshot.data['body']
-                                : '   ' + ' (Error on this message)',
-                                style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
-                                height: 1.5,
-                                letterSpacing: 1.1,
-                                ),
-                                ),
                               ],
                             ),
-                          ),
+                              new Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                new Padding(
+                                  padding: EdgeInsets.only(top: 10.0),
+                                child: new Text(widget.snapshot.data['subject'] != null
+                                ? widget.snapshot.data['subject']
+                                : '(error on this title)',
+                                style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold,
+                                height: 1.1,
+                                ),
+                                )),
+                              ],
+                              ),
+                              ],
+                            ),
+                           subtitle: new Padding(
+                            padding: EdgeInsets.only(top: 10.0),
+                            child: widget.snapshot.data['body'] != null
+                            ? new Linkify(
+                                onOpen: (urlToOpen) async {
+                                  if(await canLaunch(urlToOpen.url)) {
+                                    await launch(urlToOpen.url);
+                                  } else {
+                                    print(urlToOpen.url + ' error to launch');
+                                  }
+                                },
+                                text: widget.snapshot.data['body'],
+                                textAlign: TextAlign.justify,
+                                  style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
+                                  height: 1.5,
+                                  letterSpacing: 1.1,
+                                  ),
+                                )
+                            : new Container(),
                           ),
                             trailing: new Material(
                               color: Colors.transparent,
@@ -285,33 +324,6 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                                        ), value: '2')]
                               ),
                             ),
-                            /*new Container(
-                              height: 30.0,
-                              width: 80.0,
-                            child: new Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                new Padding(
-                                  padding: EdgeInsets.only(left: 0.0),
-                                  child: 
-                                  ds['typeOfPost'] == 'issue'
-                                  ? new Icon(CupertinoIcons.burst, color: Colors.deepPurpleAccent, size: 20.0)
-                                  : ds['typeOfPost'] == 'tip'
-                                  ? new Icon(CupertinoIcons.lightbulb, color: Colors.purpleAccent, size: 20.0)
-                                  : new Icon(CupertinoIcons.rocket, color: Colors.cyanAccent, size: 20.0)
-                                  ),
-                                new Padding(
-                                  padding: EdgeInsets.only(left: 5.0),
-                                child: new Text(
-                                  ds['typeOfPost'] == 'issue' 
-                                  ? 'Issue'
-                                  : ds['typeOfPost'] == 'tip'
-                                  ? 'Tip'
-                                  : 'Project',
-                                  style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal))),
-                              ],
-                            ),
-                            ),*/
                           ),
                           new Padding(
                             padding: EdgeInsets.only(left: 30.0),
@@ -348,30 +360,6 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                                         ? widget.snapshot.data['likes'].toString()
                                         : ' ',
                                         style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ),
-                                new InkWell(
-                                  onTap: () {
-
-                                  },
-                                child: new Container(
-                                  height: 30.0,
-                                  width: 55.0,
-                                  decoration: new BoxDecoration(
-                                    color: Colors.grey[800].withOpacity(0.6),
-                                    borderRadius: new BorderRadius.circular(3.0)
-                                  ),
-                                  child: new Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      new Text('🥳',
-                                      style: new TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.bold),
-                                      ),
-                                      new Text('0',
-                                      style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -503,9 +491,17 @@ class NotificationsDetailsState extends State<NotificationsDetails> {
                               padding: EdgeInsets.only(top: 30.0, left: 50.0, right: 50.0),
                               child: new CommentContainer(
                                 currentUser: widget.currentUser,
-                                currentUsername: widget.currentUserUsername,
-                                currentUserphoto: widget.currentUserPhoto,
-                                currentSoundcloud: currentSoundCloud,
+                                currentUserUsername: widget.currentUserUsername,
+                                currentUserPhoto: widget.currentUserPhoto,
+                                currentAboutMe: widget.currentAboutMe,
+                                currentSoundCloud: widget.currentSoundCloud,
+                                currentSpotify: widget.currentSpotify,
+                                currentInstagram: widget.currentInstagram,
+                                currentYoutube: widget.currentYoutube,
+                                currentTwitter: widget.currentTwitter,
+                                currentTwitch: widget.currentTwitch,
+                                currentMixcloud: widget.currentMixcloud,
+                                currentNotificationsToken: widget.currentNotificationsToken,
                                 postID: widget.snapshot.data['postID'],
                               ),
                             ),

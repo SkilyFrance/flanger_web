@@ -256,7 +256,14 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
                  'uid': widget.currentUser,
                  'email': widget.currentUserEmail,
                  'username': widget.currentUsername,
+                 'aboutMe': 'null',
                  'soundCloud': _soundCloudTextEditingController.value.text.length > 10 ?  _soundCloudTextEditingController.value.text.toString() : 'null',
+                 'spotify': 'null',
+                 'instagram': 'null',
+                 'youtube': 'null',
+                 'twitter': 'null',
+                 'twitch': 'null',
+                 'mixcloud': 'null',
                  'profilePhoto': filePhotoURL,
                }).whenComplete(() {
                 //Go to creationProcess

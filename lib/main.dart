@@ -9,16 +9,18 @@ void main() {
 
 class MyApp extends StatelessWidget {
 
+  final Future<FirebaseApp> _init = Firebase.initializeApp();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Flanger',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: new FutureBuilder(
-      future: Firebase.initializeApp(),
+      future: _init,
       builder: (context, snapshot) {
         //checkErrors
         if(snapshot.hasError) {

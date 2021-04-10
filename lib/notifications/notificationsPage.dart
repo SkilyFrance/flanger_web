@@ -12,7 +12,15 @@ class NotificationsPage extends StatefulWidget {
   String currentUser;
   String currentUserUsername;
   String currentUserPhoto;
-  String notificationsToken;
+  String currentAboutMe;
+  String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
 
 
   NotificationsPage({
@@ -20,7 +28,15 @@ class NotificationsPage extends StatefulWidget {
     this.currentUser, 
     this.currentUserUsername,
     this.currentUserPhoto,
-    this.notificationsToken,
+    this.currentAboutMe,
+    this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     }) : super(key: key);
 
 
@@ -42,7 +58,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
  bool _searchingInProgress = false; 
 
   String _postIDSelected = '';
-   int listTileSelected;
+  int listTileSelected;
   Stream<dynamic> fetchAllNotifcations() {
     setState(() {
       _searchingInProgress = true;
@@ -118,11 +134,6 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                               height: MediaQuery.of(context).size.height*0.40,
                               width: MediaQuery.of(context).size.width,
                               color: Colors.transparent,
-                              /*child: new Center(
-                                child: new CircularProgressIndicator(
-                                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-                                ),
-                              ),*/
                             );
                             }
                             if(snapshot.hasError) {
@@ -221,24 +232,6 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                   ),
                                 ],
                               );
-                            /*return new Container(
-                              height: MediaQuery.of(context).size.height*0.50,
-                              width: MediaQuery.of(context).size.width,
-                              color: Colors.transparent,
-                              child: new Center(
-                                child: new Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                      new Text('No notification yet',
-                                      style: new TextStyle(color: Colors.grey[600], fontSize: 20.0, fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    new Padding(
-                                      padding: EdgeInsets.only(top: 20.0),
-                                    child: new Icon(CupertinoIcons.bell, color: Colors.grey[600], size: 30.0)),
-                                  ],
-                                ),
-                            ));*/
                             }
                             return new Row(
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -283,8 +276,6 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                     itemCount: snapshot.data.docs.length,
                                     itemBuilder: (BuildContext context, int index) {
                                       var ds = snapshot.data.docs[index];
-                                      //_postIDSelected = snapshot.data.docs[0]['postID'];
-                                      //print('_postIDSelected =  ' + snapshot.data.docs[0]['postID']);
                                       return new Column(
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
@@ -294,13 +285,14 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                               splashColor: Colors.grey[900],
                                               highlightColor: Colors.grey[900],
                                               focusColor: Colors.grey[900],
-                                              onTap: () {
-                                                print('Display notifications details');
-                                                /*setState(() {
-                                                  _postIDSelected = ds['postID'];
-                                                  print('_postIDSelected = $_postIDSelected');
-                                                });*/
-                                              /* if(ds['alreadySeen'] == false) {
+                                          child: new ListTile(
+                                            onTap: () {
+                                              setState(() {
+                                                _postIDSelected = ds['postID'];
+                                                listTileSelected = index;
+                                                _fetchPostsDatas = fetchPostsDatas(ds['postID']);
+                                                print('_postIDSelected = $_postIDSelected');
+                                                if(ds['alreadySeen'] == false) {
                                                   FirebaseFirestore.instance
                                                     .collection('users')
                                                     .doc(widget.currentUser)
@@ -309,25 +301,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                                     .update({
                                                       'alreadySeen': true
                                                     }).whenComplete(() => print('Cloud Firestore : notificationID, already seen set to true'));
-                                                } else {}
-                                                Navigator.push(context, 
-                                                new CupertinoPageRoute(
-                                                  builder: (context) => new NotificationsDetails(
-                                                    currentUser: widget.currentUser,
-                                                    currentUserUsername: widget.currentUserUsername,
-                                                    currentUserPhoto: widget.currentUserPhoto,
-                                                    currentSoundCloud: currentSoundCloud,
-                                                    postID: ds['postID'],
-                                                    heroTag: ds['postID'],
-                                                  )));*/
-                                              },
-                                          child: new ListTile(
-                                            onTap: () {
-                                              setState(() {
-                                                _postIDSelected = ds['postID'];
-                                                listTileSelected = index;
-                                                _fetchPostsDatas = fetchPostsDatas(ds['postID']);
-                                                print('_postIDSelected = $_postIDSelected');
+                                                } else {print('AlreadySeen');}
                                               });
                                             },
                                             focusColor: Colors.grey[900],
@@ -459,17 +433,19 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                             currentUser: widget.currentUser,
                                             currentUserPhoto: widget.currentUserPhoto,
                                             currentUserUsername: widget.currentUserUsername,
+                                            currentAboutMe: widget.currentAboutMe,
+                                            currentSoundCloud: widget.currentSoundCloud,
+                                            currentSpotify: widget.currentSpotify,
+                                            currentInstagram: widget.currentInstagram,
+                                            currentYoutube: widget.currentYoutube,
+                                            currentTwitter: widget.currentTwitter,
+                                            currentTwitch: widget.currentTwitch,
+                                            currentMixcloud: widget.currentMixcloud,
+                                            currentNotificationsToken: widget.currentNotificationsToken,
                                             snapshot: snapshot,
                                           );
                                       }
                                     ),
-                                  /* child: new NotificationsDetails(
-                                      key: notificationsPageKey,
-                                      currentUser: widget.currentUser,
-                                      currentUserPhoto: widget.currentUserPhoto,
-                                      currentUserUsername: widget.currentUserUsername,
-                                      postID: _postIDSelected,
-                                    ),*/
                                   ),
                                 ),
                               ],

@@ -1,23 +1,41 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReplyContainer extends StatefulWidget {
 
   String currentUser;
-  String currentUsername;
-  String currentUserphoto;
-  String currentSoundcloud;
+  String currentUserUsername;
+  String currentUserPhoto;
+  String currentAboutMe;
+  String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
+  String currentNotificationsToken;
   String postID;
   String commentID;
 
 
   ReplyContainer({
     Key key,
-    this.currentUser,
-    this.currentUsername,
-    this.currentUserphoto,
-    this.currentSoundcloud,
+    this.currentUser, 
+    this.currentUserUsername,
+    this.currentUserPhoto,
+    this.currentAboutMe,
+    this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
+    this.currentNotificationsToken,
     this.postID,
     this.commentID,
     }) : super(key: key);
@@ -162,17 +180,25 @@ ScrollController _listRepliesScrollController = new ScrollController();
                           ),
                         ),
                       subtitle: new Padding(
-                    padding: EdgeInsets.only(top: 5.0),
-                    child: new Text(
-                      ds['content'] != null
-                      ? ds['content'].toString()
-                      : '(Error on this message)',
-                      style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
-                      height: 1.5,
-                      letterSpacing: 1.1,
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: ds['content'] != null
+                        ? new Linkify(
+                            onOpen: (urlToOpen) async {
+                              if(await canLaunch(urlToOpen.url)) {
+                                await launch(urlToOpen.url);
+                              } else {
+                                print(urlToOpen.url + ' error to launch');
+                              }
+                            },
+                            text: ds['content'],
+                            textAlign: TextAlign.justify,
+                              style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal,
+                              height: 1.5,
+                              letterSpacing: 1.1,
+                              ),
+                            )
+                        : new Container(),
                       ),
-                    ),
-                    ),
                     ),
                     ),
                   ],

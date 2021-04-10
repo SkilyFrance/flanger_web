@@ -4,19 +4,33 @@ import 'package:flutter/material.dart';
 class SubjectEditingController extends StatefulWidget {
 
   String currentUser;
-  String currentUserPhoto;
   String currentUserUsername;
+  String currentUserPhoto;
+  String currentAboutMe;
   String currentSoundCloud;
+  String currentSpotify;
+  String currentInstagram;
+  String currentYoutube;
+  String currentTwitter;
+  String currentTwitch;
+  String currentMixcloud;
   String currentNotificationsToken;
   TextEditingController currentTextEditingController;
   FocusNode currentFocusNode;
 
   SubjectEditingController({
     Key key,
-    this.currentUser,
-    this.currentUserPhoto,
+    this.currentUser, 
     this.currentUserUsername,
+    this.currentUserPhoto,
+    this.currentAboutMe,
     this.currentSoundCloud,
+    this.currentSpotify,
+    this.currentInstagram,
+    this.currentYoutube,
+    this.currentTwitter,
+    this.currentTwitch,
+    this.currentMixcloud,
     this.currentNotificationsToken,
     this.currentTextEditingController,
     this.currentFocusNode,
@@ -44,7 +58,7 @@ class SubjectEditingControllerState extends State<SubjectEditingController> {
         showCursor: true,
         //textAlignVertical: TextAlignVertical.center,
         textAlign: TextAlign.left,
-        style: new TextStyle(color: Colors.white, fontSize: 13.0),
+        style: new TextStyle(color: Colors.white, fontSize: 16.0),
         keyboardType: TextInputType.multiline,
         scrollPhysics: new ScrollPhysics(),
         keyboardAppearance: Brightness.dark,

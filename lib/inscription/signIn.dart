@@ -140,7 +140,7 @@ class SignInPageState extends State<SignInPage> {
                       minHeight: 20.0,
                     ),
                     ),
-                  dontHaveAccount(),
+                  //dontHaveAccount(),
                 ],
               ),
           ),
@@ -166,7 +166,7 @@ class SignInPageState extends State<SignInPage> {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () {
-        if(_emailTextController.value.text.length > 4 && _passwordTextController.value.text.length > 3) {
+        if(_emailTextController.value.text.length > 4 && _passwordTextController.value.text.length > 3 && _emailTextController.value.text == 'testdev@gmail.com') {
           FirebaseAuth.instance
           .signInWithEmailAndPassword(
             email: _emailTextController.value.text.toString(), 
