@@ -52,6 +52,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
   ScrollController _listPostScrollController = ScrollController();
   List<bool> listIsExpanded = [];
   List<TextEditingController> listTextEditingController = [];
+  List<FocusNode> listFocusNodeController = [];
 
   //PostEditing controller
   TextEditingController _subjectEditingController = new TextEditingController();
@@ -298,8 +299,13 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                           itemCount: snapshot.data.docs.length,
                           itemBuilder: (BuildContext context, int index) {
                             var ds = snapshot.data.docs[index];
+                            List<dynamic> arrayOfLikes = ds['likedBy'];
+                            List<dynamic> arrayOfFires = ds['firedBy'];
+                            List<dynamic> arrayOfRockets = ds['rocketedBy'];
+                            List<dynamic> arrayOfSavedBy = ds['savedBy'];
                             listIsExpanded.add(false);
                             listTextEditingController.add(TextEditingController());
+                            listFocusNodeController.add(FocusNode());
                             return new Padding(
                               padding: EdgeInsets.only(top: 20.0, right: 50.0, left: 50.0),
                               child: new Column(
@@ -322,6 +328,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     listIsExpanded: listIsExpanded,
                                     index: index,
                                     listTextEditingController: listTextEditingController,
+                                    listFocusNodeController: listFocusNodeController,
                                     postID: ds['postID'],
                                     typeOfPost: ds['typeOfPost'],
                                     timestamp: ds['timestamp'],
@@ -329,10 +336,19 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     subject: ds['subject'],
                                     body: ds['body'],
                                     likes: ds['likes'],
+                                    likedBy: arrayOfLikes,
+                                    fires: ds['fires'],
+                                    firedBy: arrayOfFires,
+                                    rockets: ds['rockets'],
+                                    rocketedBy: arrayOfRockets,
                                     comments: ds['comments'],
+                                    commentedBy: ds['commentedBy'],
+                                    reactedBy: ds['reactedBy'],
+                                    savedBy: arrayOfSavedBy,
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
-                       
+                                    adminNotificationsToken: ds['adminNotificationsToken'],
+                                    homeContext: contex,
                                   ),
                                 ],
                               ),

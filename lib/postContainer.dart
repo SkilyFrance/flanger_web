@@ -58,6 +58,8 @@ class PostContainer extends StatefulWidget {
   String adminUsername;
   String adminNotificationsToken;
 
+  BuildContext homeContext;
+
   PostContainer({
     Key key,
     this.comesFromHome,
@@ -96,6 +98,7 @@ class PostContainer extends StatefulWidget {
     this.adminProfilephoto,
     this.adminUsername,
     this.adminNotificationsToken,
+    this.homeContext,
     }) : super(key: key);
 
 
@@ -109,6 +112,25 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
   bool get wantKeepAlive => true;
 
   bool _uploadInProgress = false;
+
+  final postSaved = new SnackBar(
+    backgroundColor: Colors.deepPurpleAccent,
+    content: new Text('This post has been saved 🌩️',
+    textAlign: TextAlign.center,
+    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+    ));
+  final removeFromSaved = new SnackBar(
+    backgroundColor: Colors.deepPurpleAccent,
+    content: new Text('This post has been removed 🌩️',
+    textAlign: TextAlign.center,
+    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+    ));
+  final postAlreadySaved = new SnackBar(
+    backgroundColor: Colors.deepPurpleAccent,
+    content: new Text('This post has been already saved 🌩️',
+    textAlign: TextAlign.center,
+    style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+    ));
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +307,6 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                     child: new Image.asset('web/icons/soundCloud.png', fit: BoxFit.cover)),
                                 )))
                               : new Container(),
-
                               snapshot.data['spotify'] != 'null'
                               ? new InkWell(
                                 onTap: () async {
@@ -520,7 +541,8 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                       )
                   : new Container(),
                 ),
-              trailing: new Material(
+              trailing: widget.comesFromHome == true
+              ? new Material(
                 color: Colors.transparent,
                 child: new PopupMenuButton(
                   child: new Icon(Icons.more_horiz_rounded, color: Colors.white, size: 20.0),
@@ -529,25 +551,138 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     borderRadius: new BorderRadius.circular(5.0)
                   ),
                   onSelected: (selectedValue) {
+                  if(widget.savedBy.contains(widget.currentUser)) {
+                    ScaffoldMessenger.of(widget.homeContext).showSnackBar(postAlreadySaved);
+                  } else {
+                  FirebaseFirestore.instance
+                    .collection('posts')
+                    .doc(widget.postID)
+                    .update({
+                      'savedBy': FieldValue.arrayUnion([widget.currentUser]),
+                    }).whenComplete(() {
+                      ScaffoldMessenger.of(widget.homeContext).showSnackBar(postSaved);
+                    });
+                  }
                   },
                   itemBuilder: (BuildContext ctx) => [
                     new PopupMenuItem(
                       child: new Row(
                         children: [
-                          new Text(widget.comesFromHome == true ? 'Save' : 'Remove'),
+                          new Text('Save'),
                           new Padding(padding: EdgeInsets.only(left: 5.0),
                           child: new Icon(CupertinoIcons.cloud_download))]
-                          ), value: '1'),
-                          //2
+                          ), value: '1'),]
+                ),
+              )
+              : new Material(
+                color: Colors.transparent,
+                child: new PopupMenuButton(
+                  child: new Icon(Icons.more_horiz_rounded, color: Colors.white, size: 20.0),
+                  color: Colors.grey[400],
+                  shape: new RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(5.0)
+                  ),
+                  onSelected: (selectedValue) {
+                                  return showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return StatefulBuilder(
+                                        builder: (BuildContext dialoContext, StateSetter dialogSeState){
+                                          return new AlertDialog(
+                                            backgroundColor: Color(0xff121212),
+                                            title: new Column(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              children: [
+                                              new Center(
+                                                child: new Container(
+                                                  child: new Text('Remove from saved post ?',
+                                                  style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ),
+                                              new Padding(
+                                                padding: EdgeInsets.only(top: 30.0),
+                                                child: new Center(
+                                                  child: new Icon(CupertinoIcons.trash, color: Colors.grey[600], size: 30.0),
+                                                ),
+                                              ),
+                                              new Padding(
+                                                padding: EdgeInsets.only(top: 30.0),
+                                                child: new Container(
+                                                  height: 38.0,
+                                                  width: 220.0,
+                                                  color: Colors.transparent,
+                                                  child: new Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    children: [
+                                                      new InkWell(
+                                                        onTap: () {
+                                                        Navigator.pop(context);
+                                                        FirebaseFirestore.instance
+                                                          .collection('posts')
+                                                          .doc(widget.postID)
+                                                          .update({
+                                                            'savedBy': FieldValue.arrayRemove([widget.currentUser]),
+                                                          }).whenComplete(() {
+                                                            ScaffoldMessenger.of(widget.homeContext).showSnackBar(removeFromSaved);
+                                                          });
+                                                        },
+                                                      child: new Container(
+                                                        height: 38.0,
+                                                        width: 100.0,
+                                                        decoration: new BoxDecoration(
+                                                          borderRadius: new BorderRadius.circular(5.0),
+                                                          color: Colors.transparent,
+                                                        ),
+                                                        child: new Center(
+                                                          child: new Text('Yes, please',
+                                                          style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      ),
+                                                      new InkWell(
+                                                        onTap: () {
+                                                          Navigator.pop(dialoContext);
+                                                        },
+                                                      child: new Container(
+                                                        height: 38.0,
+                                                        width: 100.0,
+                                                        decoration: new BoxDecoration(
+                                                          borderRadius: new BorderRadius.circular(5.0),
+                                                          color: Colors.deepPurpleAccent,
+                                                        ),
+                                                        child: new Center(
+                                                          child: new Text('No, thanks',
+                                                          style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      ),
+                                                    ],
+                                                  )
+                                                ),
+                                              ),
+                                              ],
+                                            ),
+                                          );
+                                        });
+                                    }
+                                );
+                  },
+                  itemBuilder: (BuildContext ctx) => [
                     new PopupMenuItem(
                       child: new Row(
                         children: [
-                          new Text('Report'),
+                          new Text('Remove'),
                           new Padding(padding: EdgeInsets.only(left: 5.0),
-                          child: new Icon(CupertinoIcons.tag))]
-                          ), value: '2')]
+                          child: new Icon(CupertinoIcons.cloud_download))]
+                          ), value: '1'),]
                 ),
-              ),
+              )
+
+
+
               /*new Container(
                 height: 30.0,
                 width: 80.0,
@@ -884,6 +1019,21 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                 ),
               ),
               ),
+              widget.savedBy.contains(widget.currentUser)
+              ? new Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  new Icon(
+                    CupertinoIcons.cloud_download, color: Colors.grey[600], size: 20.0),
+                  new Padding(
+                    padding: EdgeInsets.only(left: 8.0, right: 20.0),
+                    child: new Text('Post already saved',
+                    style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                    ),
+                  ),
+                ],
+              )
+              : new Container(),
               new Padding(
                 padding: EdgeInsets.only(top: 30.0, left: 50.0, right: 50.0),
                 child: widget.listIsExpanded[widget.index] == true ? new CommentContainer(
@@ -901,6 +1051,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                  currentNotificationsToken: widget.currentNotificationsToken,
                  postID: widget.postID,
                  reactedBy: widget.reactedBy,
+                 homeContext: widget.homeContext,
                 )
                 : new Container(),
               ),

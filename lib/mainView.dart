@@ -181,7 +181,84 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
                    borderRadius: new BorderRadius.circular(5.0)
                  ),
                  onSelected: (selectedValue)  {
-                     signOut();
+                 return showDialog(
+                   context: context,
+                   builder: (context) {
+                     return StatefulBuilder(
+                       builder: (BuildContext dialoContext, StateSetter dialogSeState){
+                         return new AlertDialog(
+                           backgroundColor: Color(0xff121212),
+                           title: new Column(
+                             mainAxisAlignment: MainAxisAlignment.start,
+                             children: [
+                             new Center(
+                               child: new Container(
+                                 child: new Text('Are you sure to quit ?',
+                                 style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+                                 ),
+                               ),
+                             ),
+                             new Padding(
+                               padding: EdgeInsets.only(top: 30.0),
+                               child: new Center(
+                                 child: new Icon(Icons.logout, color: Colors.grey[600], size: 30.0),
+                               ),
+                             ),
+                             new Padding(
+                               padding: EdgeInsets.only(top: 30.0),
+                               child: new Container(
+                                 height: 38.0,
+                                 width: 220.0,
+                                 color: Colors.transparent,
+                                 child: new Row(
+                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                   children: [
+                                     new InkWell(
+                                       onTap: () {
+                                         signOut();
+                                       },
+                                     child: new Container(
+                                       height: 38.0,
+                                       width: 100.0,
+                                       decoration: new BoxDecoration(
+                                         borderRadius: new BorderRadius.circular(5.0),
+                                         color: Colors.transparent,
+                                       ),
+                                       child: new Center(
+                                         child: new Text('Yes, please',
+                                         style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                                         ),
+                                       ),
+                                     ),
+                                     ),
+                                     new InkWell(
+                                       onTap: () {
+                                         Navigator.pop(dialoContext);
+                                       },
+                                     child: new Container(
+                                       height: 38.0,
+                                       width: 100.0,
+                                       decoration: new BoxDecoration(
+                                         borderRadius: new BorderRadius.circular(5.0),
+                                         color: Colors.deepPurpleAccent,
+                                       ),
+                                       child: new Center(
+                                         child: new Text('No, thanks',
+                                         style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                         ),
+                                       ),
+                                     ),
+                                     ),
+                                   ],
+                                 )
+                               ),
+                             ),
+                             ],
+                           ),
+                         );
+                       });
+                   }
+                 );
                  },
                  itemBuilder: (BuildContext ctx) => [
                    new PopupMenuItem(

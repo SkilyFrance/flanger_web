@@ -1,12 +1,10 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
+import 'dart:html';
 import 'package:flanger_web_version/inscription/soundCloudLink.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_for_web/image_picker_for_web.dart';
+import 'package:image_picker_web/image_picker_web.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 
 
@@ -29,12 +27,13 @@ class UserPhotoPageState extends State<UserPhotoPage> {
   TextEditingController _soundCloudTextEditingController = new TextEditingController();
   PageController _pageController = new PageController(initialPage: 0);
   File _image;
+  String imageName;
+  MediaInfo _imageMediaInfo;
   bool _noPhotoSelected = false;
+  bool _photoReaded = false;
   var notificationsToken = 'null';
-  Uint8List bytes;
+  //Uint8List bytes;
 
-  final ImagePicker _picker = ImagePicker();
-  PickedFile _imageFile;
 
 
 
@@ -108,11 +107,23 @@ class UserPhotoPageState extends State<UserPhotoPage> {
                   focusColor: Colors.transparent,
                   onTap: () async {
                     if(kIsWeb) {
-                    final pickedFile = await _picker.getImage(source: ImageSource.gallery, maxHeight: 1000, maxWidth: 1000, imageQuality: 70);
-                    bytes = await pickedFile.readAsBytes();
-                    setState(() {
-                      bytes = bytes;
-                    });
+                      InputElement uploadInput = FileUploadInputElement();
+                      uploadInput.accept = '.png,.jpg';
+                      uploadInput.click();
+                      uploadInput.onChange.listen((event) {
+                        final filePhoto = uploadInput.files.first;
+                        final reader = FileReader();
+
+                        reader.readAsDataUrl(filePhoto);
+
+                        reader.onLoadEnd.listen((loadEndEvent) async {
+                          print('Reader job done');
+                          setState(() {
+                            _photoReaded = true;
+                            _image = filePhoto;
+                          });
+                        });
+                      });
                     } else {
                       print('No ksiweb');
                     }
@@ -124,8 +135,14 @@ class UserPhotoPageState extends State<UserPhotoPage> {
                     color: Colors.grey[900],
                     shape: BoxShape.circle,
                   ),
-                  child: bytes != null
-                  ? new ClipOval(child: new Image.memory(bytes, fit: BoxFit.cover))
+                  child: _photoReaded == true
+                  ? new Center(
+                    child: new Icon(
+                      CupertinoIcons.checkmark,
+                      size: 30.0,
+                      color: Colors.green,
+                    ),
+                  ) //new ClipOval(child: new Image.file(_image, fit: BoxFit.cover))
                   : new Container(),
                   ),
                 ),
@@ -188,13 +205,13 @@ class UserPhotoPageState extends State<UserPhotoPage> {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () {
-        if(bytes != null) {
+        if(_image != null) {
         Navigator.pushAndRemoveUntil(context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
         new SouncCloudLinkPage(
           currentUser: widget.currentUser,
           currentUserEmail: widget.currentUserEmail,
           currentUsername: widget.currentUsername,
-          currentUserphoto: bytes,
+          currentUserPhoto: _image,
         )), 
         (route) => false);
         } else {

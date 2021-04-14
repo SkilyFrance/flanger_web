@@ -6,6 +6,7 @@ publicationRequest(
   String currentUserUsername,
   String currentUserPhoto,
   String currentNotificationsToken,
+  String currentSoundCloud,
   String body, 
   String subject, 
   StateSetter setState, 
@@ -24,11 +25,13 @@ publicationRequest(
   
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    .collection('posts')
+    //.collection('posts')
+    .collection('test')
     .doc('$_timestampCreation$currentUser')
     .set({
       'adminNotificationsToken': currentNotificationsToken,
       'adminProfilephoto': currentUserPhoto,
+      'adminSoundCloud': currentSoundCloud,
       'adminUID': currentUser,
       'adminUsername': currentUserUsername,
       'body': body,

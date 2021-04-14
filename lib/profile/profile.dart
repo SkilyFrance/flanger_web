@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:html';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 
 class ProfilePage extends StatefulWidget {
@@ -50,6 +52,8 @@ class ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientM
 
   Stream<dynamic> _fetchCurrentUserDatas;
   bool _searchingInProgress = false;
+  bool _uploadingPhotoInProgress = false;
+  File _imageToUpdate;
 
   //About me variables
   TextEditingController _aboutMeTextEditingController = new TextEditingController();
@@ -74,22 +78,6 @@ class ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientM
       .doc(widget.currentUser)
       .snapshots();
   }
-
-  /*String currentSoundCloud;
-  String currentNotificationsToken;
-  getCurrentSoundCloud() {
-    FirebaseFirestore.instance
-      .collection('users')
-      .doc(widget.currentUser)
-      .get().then((value) {
-        if(value.exists) {
-          setState(() {
-            currentSoundCloud = value.data()['soundCloud'];
-            currentNotificationsToken = value.data()['notificationsToken'];
-          });
-        }
-      });
-  }*/
 
   initializationTimer() {
   return Timer(Duration(seconds: 5), () {
@@ -375,9 +363,57 @@ class ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientM
                               color: Colors.grey[900],
                               shape: BoxShape.circle,
                             ),
-                            child: widget.currentUserPhoto != null
-                            ? new ClipOval(
+                            child: widget.currentUserPhoto != null && _uploadingPhotoInProgress == false
+                            ? new InkWell(
+                              onTap: () {
+                              if(kIsWeb) {
+                                InputElement uploadInput = FileUploadInputElement();
+                                uploadInput.click();
+                                uploadInput.onChange.listen((event) {
+
+                                  final filePhoto = uploadInput.files.first;
+                                  final reader = FileReader();
+
+                                  reader.readAsDataUrl(filePhoto);
+
+                                  reader.onLoadEnd.listen((loadEndEvent) async {
+                                    print('Reader job done');
+                                    setState(() {
+                                      _imageToUpdate = filePhoto;
+                                      _uploadingPhotoInProgress = true;
+                                    });
+                                    final _storage = firebase_storage.FirebaseStorage.instance;
+                                    var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
+                                    var snapshot = await ref.child('${widget.currentUser}/profilePhoto.png').putBlob(_imageToUpdate);
+                                    print('Firebase storage : Photo uploaded.');
+                                    var downloadUrl = await snapshot.ref.getDownloadURL().then((filePhotoURL) async {
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(widget.currentUser)
+                                        .update({
+                                          'profilePhoto': filePhotoURL,
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore: profilePhoto updated');
+                                          setState(() {
+                                            _uploadingPhotoInProgress = false;
+                                          });
+                                        });
+                                    });
+
+                                  });
+                                });
+                              } else {
+                                print('No ksiweb');
+                              }
+                              },
+                              child: new ClipOval(
                               child: new Image.network(widget.currentUserPhoto, fit: BoxFit.cover, filterQuality: FilterQuality.low),
+                            ))
+                            : widget.currentUserPhoto != null && _uploadingPhotoInProgress == true
+                            ? new Center(
+                              child: new CircularProgressIndicator(
+                                valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                              ),
                             )
                             : new Container(),
                           ),

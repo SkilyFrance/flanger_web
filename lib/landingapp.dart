@@ -1,15 +1,14 @@
 import 'package:flanger_web_version/inscription/sign.dart';
 import 'package:flanger_web_version/inscription/signIn.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import 'sign.dart';
-
-class LandinPage extends StatefulWidget {
+class LandingApp extends StatefulWidget {
   @override
-  LandinPageState createState() => LandinPageState();
+  LandingAppState createState() => LandingAppState();
 }
 
-class LandinPageState extends State<LandinPage> {
+class LandingAppState extends State<LandingApp> {
 
   @override
   void initState() {
@@ -21,7 +20,7 @@ class LandinPageState extends State<LandinPage> {
     return Scaffold(
       backgroundColor: Color(0xff0E0E0E),
       body: new GestureDetector(
-        onTap: (){FocusScope.of(context).requestFocus(new FocusNode());},
+        onTap: () {FocusScope.of(context).requestFocus(new FocusNode());},
         child: new SingleChildScrollView(
       child: new Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -46,7 +45,7 @@ class LandinPageState extends State<LandinPage> {
           new Center(
             child: new Text('The new community of electronic music producers.',
             textAlign: TextAlign.center,
-            style: new TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 18.0,letterSpacing: 2.0,
+            style: new TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 12.0,letterSpacing: 2.0,
             ),
             ),
           ),
@@ -68,8 +67,8 @@ class LandinPageState extends State<LandinPage> {
                     new Padding(
                       padding: EdgeInsets.only(bottom: 20.0),
                       child: new Text('Meet.',
-                      style: new TextStyle(color: Colors.deepPurpleAccent, fontSize: 25.0, fontWeight: FontWeight.w500))),
-                      new Text('👋', style: new TextStyle(fontSize: 45.0)),
+                      style: new TextStyle(color: Colors.deepPurpleAccent, fontSize: 18.0, fontWeight: FontWeight.w500))),
+                      new Text('👋', style: new TextStyle(fontSize: 35.0)),
                   ],
                 ),
                 new Padding(
@@ -80,8 +79,8 @@ class LandinPageState extends State<LandinPage> {
                     new Padding(
                       padding: EdgeInsets.only(bottom: 20.0),
                       child: new Text('Discuss.',
-                      style: new TextStyle(color: Colors.purpleAccent, fontSize: 25.0, fontWeight: FontWeight.w500))),
-                      new Text('💬', style: new TextStyle(fontSize: 45.0)),
+                      style: new TextStyle(color: Colors.purpleAccent, fontSize: 18.0, fontWeight: FontWeight.w500))),
+                      new Text('💬', style: new TextStyle(fontSize: 35.0)),
                   ],
                 ),
                 ),
@@ -93,8 +92,8 @@ class LandinPageState extends State<LandinPage> {
                     new Padding(
                       padding: EdgeInsets.only(bottom: 20.0),
                       child: new Text('Progress.',
-                      style: new TextStyle(color: Colors.cyanAccent, fontSize: 25.0, fontWeight: FontWeight.w500))),
-                      new Text('🚀', style: new TextStyle(fontSize: 45.0)),
+                      style: new TextStyle(color: Colors.cyanAccent, fontSize: 18.0, fontWeight: FontWeight.w500))),
+                      new Text('🚀', style: new TextStyle(fontSize: 35.0)),
                   ],
                 ),
                 ),
@@ -103,30 +102,28 @@ class LandinPageState extends State<LandinPage> {
           ),
           ),
           new Container(
-            height: MediaQuery.of(context).size.height*0.10,
-            width: MediaQuery.of(context).size.width,
             constraints: new BoxConstraints(
-              minHeight: 120.0,
+              minHeight: 50.0,
             ),
             ),
-            startButtton(),
-  
+            downloadOnIOS(),
+            new Padding(
+              padding: EdgeInsets.only(top: 30.0),
+              child: downloadOnAndroid(),
+            ),
         ],
       ),
       ),
         ),
     );
   }
-
-    startButtton() {
+    downloadOnIOS() {
     return new InkWell(
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () {
-        Navigator.pushAndRemoveUntil(context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
-        new SignPage()), 
-        (route) => false);
+        launch('https://apps.apple.com/us/app/flanger/id1556875695');
       },
     child: new Container(
       constraints: new BoxConstraints(
@@ -146,21 +143,20 @@ class LandinPageState extends State<LandinPage> {
         borderRadius: new BorderRadius.circular(50.0),
       ),
       child: new Center(
-        child: new Text('START',
-        style: new TextStyle(color: Colors.cyanAccent, fontSize: 15.0, fontWeight: FontWeight.bold),
+        child: new Text('Download on IOS',
+        style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.normal),
         ),
       ),
     ));
 
   }
-
-  signUpButton() {
+    downloadOnAndroid() {
     return new InkWell(
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () {
-        print('Sign up');
+        launch('https://play.google.com/store/apps/details?id=com.flanger.flanger_android');
       },
     child: new Container(
       constraints: new BoxConstraints(
@@ -172,14 +168,20 @@ class LandinPageState extends State<LandinPage> {
       height: MediaQuery.of(context).size.height*0.40,
       width: MediaQuery.of(context).size.width*0.40,
       decoration: new BoxDecoration(
-        color: Colors.purpleAccent[700],
+        color: Colors.transparent,
+        border: new Border.all(
+          width: 1.0,
+          color: Colors.grey
+        ),
         borderRadius: new BorderRadius.circular(50.0),
       ),
       child: new Center(
-        child: new Text('SIGN UP',
-        style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
+        child: new Text('Download on Android',
+        style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.normal),
         ),
       ),
     ));
+
   }
+
 }

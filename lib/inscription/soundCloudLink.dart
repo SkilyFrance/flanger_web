@@ -1,13 +1,9 @@
-
 import 'dart:html';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
-import '../home.dart';
 import '../mainView.dart';
 
 
@@ -18,13 +14,13 @@ class SouncCloudLinkPage extends StatefulWidget {
   String currentUser;
   String currentUserEmail;
   String currentUsername;
-  Uint8List currentUserphoto;
+  File currentUserPhoto;
 
   SouncCloudLinkPage({Key key,
   this.currentUser, 
   this.currentUserEmail,
   this.currentUsername,
-  this.currentUserphoto,
+  this.currentUserPhoto,
   }) : super(key: key);
 
   @override
@@ -37,6 +33,7 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
  
   var notificationsToken = 'null';
   bool _profileInCreation = false;
+  bool _flagUrl = false;
 
 
 
@@ -110,6 +107,12 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
                     constraints: new BoxConstraints(
                       minHeight: 30.0,
                     ),
+                    ),
+                    new Padding(
+                      padding: EdgeInsets.only(top: 20.0, bottom: 40.0),
+                      child: new Text('Has to start by https://soundcloud.com/',
+                      style: new TextStyle(color: _flagUrl == true ? Colors.red : Colors.grey[700], fontSize: 13.0, fontWeight: FontWeight.normal)
+                      ),
                     ),
                   nextButton(),
                   new Container(
@@ -228,26 +231,17 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () async {
+        if((_soundCloudTextEditingController.value.text.length > 0 && _soundCloudTextEditingController.value.text.startsWith('https://soundcloud.com/')) || _soundCloudTextEditingController.value.text.length == 0) {
         if(kIsWeb) {
         print('Profile in creation');
         setState(() {
           _profileInCreation = true;
         });
         final _storage = firebase_storage.FirebaseStorage.instance;
-        var ref = _storage.ref();
-        var snapshot = await ref.child('${widget.currentUser}/profilePhoto').putData(widget.currentUserphoto);
+        var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
+        var snapshot = await ref.child('${widget.currentUser}/profilePhoto.png').putBlob(widget.currentUserPhoto);
         print('Firebase storage : Photo uploaded.');
         var downloadUrl = await snapshot.ref.getDownloadURL().then((filePhotoURL) async {
-
-        //});
-        /////////////
-          /*firebase_storage.Reference storageReference = firebase_storage.FirebaseStorage.instance
-            .ref()
-            .child('${widget.currentUser}/profilePhoto');
-            firebase_storage.UploadTask uploadTask = storageReference.putData(widget.currentUserphoto).catchError((onError) => print('Error putFile = $onError'));
-            await uploadTask;
-            print('Firebase storage : Photo uploaded.');
-            storageReference.getDownloadURL().then((filePhotoURL) async {*/
              FirebaseFirestore.instance
                .collection('users')
                .doc(widget.currentUser)
@@ -280,6 +274,11 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
             });
             } else {
           print('No web here');
+        }
+        } else {
+          setState(() {
+            _flagUrl = true;
+          });
         }
       },
     child: new Container(
@@ -338,6 +337,13 @@ class SouncCloudLinkPageState extends State<SouncCloudLinkPage> {
         controller: _soundCloudTextEditingController,
         cursorColor: Colors.white,
         obscureText: false,
+        onChanged: (value) {
+         if(_soundCloudTextEditingController.text.length > 0 && _soundCloudTextEditingController.text.length == 1) {
+           setState(() {});
+         } else if (_soundCloudTextEditingController.text.length == 0) {
+           setState(() {});
+         }
+        },
         decoration: new InputDecoration(
           prefixIcon: Icon(CupertinoIcons.profile_circled, color: Colors.white),
           contentPadding: EdgeInsets.only(left: 20.0),

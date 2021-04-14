@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flanger_web_version/inscription/sign.dart';
 import 'package:flutter/material.dart';
-
 import '../mainView.dart';
+import 'usernamePage.dart';
 
 
 class SignInPage extends StatefulWidget {
@@ -140,7 +140,7 @@ class SignInPageState extends State<SignInPage> {
                       minHeight: 20.0,
                     ),
                     ),
-                  //dontHaveAccount(),
+                  dontHaveAccount(),
                 ],
               ),
           ),
@@ -166,7 +166,7 @@ class SignInPageState extends State<SignInPage> {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       onTap: () {
-        if(_emailTextController.value.text.length > 4 && _passwordTextController.value.text.length > 3 && _emailTextController.value.text == 'testdev@gmail.com') {
+        if(_emailTextController.value.text.length > 4 && _passwordTextController.value.text.length > 3) {
           FirebaseAuth.instance
           .signInWithEmailAndPassword(
             email: _emailTextController.value.text.toString(), 
@@ -187,6 +187,13 @@ class SignInPageState extends State<SignInPage> {
                     )), 
                     (route) => false);
                 } else {
+                //Go to creationProcess
+                Navigator.pushAndRemoveUntil(
+                context, new PageRouteBuilder(pageBuilder: (_,__,___) => 
+                new UsernamePage(
+                  currentUser: authResult.user.uid, 
+                  currentUserEmail: _emailTextController.value.text)),
+                (route) => false);
                 }
               });
           }).catchError((error){
