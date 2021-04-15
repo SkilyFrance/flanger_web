@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'requestList.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
+import 'requestList.dart';
+
 
 
 class HomePage extends StatefulWidget {
@@ -79,20 +81,27 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool _lackOfSubjectOrBody = false;
   bool publishingInProgress = false;
   bool _searchingInProgress = false;
+
+  // VARIABLES FOR POST A TRACK FOR FEEDBACK //
+  AudioPlayer _feedbackAudioPlayer = new AudioPlayer();
   bool _musicIsUploaded = false;
   File _musicUploaded;
   Duration durationFileUploaded; //= Duration(milliseconds: 120);
   Duration currentPositionFeedbackPlayer;//= = Duration(milliseconds: 10);
   Duration currentBufferingFeedbackPlayer;//= = Duration(milliseconds: 10);
-  double currentRangeStartFeedback = 0.0;
-  double currentRangeEndFeedback = 200.0;
   double _dragValueStartFeedback = 0;
   double _dragValueEndFeedback = 222693;
   int _trackSplitFeedback = 6;
+  ///////////////////////////////////////
+  
+  // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
+  AudioPlayer postContainerAudioPlayer = new AudioPlayer();
+  Duration postContainerDurationTrack;
+  Duration postContainerCurrentPositionTrack;
+  double postContainerTrackDragStart = 0.0;
+  ///////////////////////////////////////
 
 
-  //AudioPlayer variables
-  AudioPlayer _feedbackAudioPlayer = new AudioPlayer();
 
 
 
@@ -175,6 +184,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     _feedbackAudioPlayer.dispose();
+    postContainerAudioPlayer.dispose();
     super.dispose();
   }
 
@@ -323,7 +333,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                    dialogSetState((){
                                                      currentPositionFeedbackPlayer = event;
                                                    });
-                                                   print('_dragValueEndFeedback = ' + Duration(milliseconds: _dragValueEndFeedback.toInt()).toString() );
+                                                   print('_dragValueEndFeedback = ' + Duration(milliseconds: _dragValueEndFeedback.toInt()).toString());
                                                    print('currentPositionFeedbackPlayer = $currentPositionFeedbackPlayer');
                                                  if(currentPositionFeedbackPlayer >= Duration(milliseconds: _dragValueEndFeedback.toInt())) {
                                                    print('AudioPlayer: Extract finished');
@@ -654,8 +664,36 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                       content: new Padding(
                         padding: EdgeInsets.only(left: 50.0, right: 50.0),
                       child: new InkWell(
-                        onTap: () {
-                          if(_subjectEditingController.text.length > 3 && _bodyEditingController.text.length > 3 && categoryPosted != null) {
+                        onTap: () async  {
+                          if(categoryPosted == 3 && _musicUploaded != null && _bodyEditingController.text.length > 3) {
+                          _feedbackAudioPlayer.stop();
+                          int _timeStampFileURL = DateTime.now().microsecondsSinceEpoch;
+                           final _storage = firebase_storage.FirebaseStorage.instance;
+                           var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
+                           var snapshot = await ref.child('${widget.currentUser}/feedbacktrack/$_timeStampFileURL').putBlob(_musicUploaded);
+                           print('Firebase storage (Temporary path) : Track uploaded.');
+                           var downloadUrl = await snapshot.ref.getDownloadURL().then((fileURL) async {
+                            feedbackPublication(
+                            fileURL,
+                            durationFileUploaded.inMilliseconds.toDouble(),
+                            _trackSplitFeedback,
+                            _dragValueStartFeedback,
+                            _dragValueEndFeedback,
+                            widget.currentUser, 
+                            widget.currentUserUsername, 
+                            widget.currentUserPhoto, 
+                            widget.currentNotificationsToken, 
+                            widget.currentSoundCloud,
+                            _bodyEditingController.value.text, 
+                            'Feedback', 
+                            dialogSetState, 
+                            publishingInProgress, 
+                            context, 
+                            _subjectEditingController,
+                            _bodyEditingController, 
+                            categoryPosted);
+                           });
+                          } else if(_subjectEditingController.text.length > 3 && _bodyEditingController.text.length > 3 && categoryPosted != null) {
                           publicationRequest(
                             widget.currentUser, 
                             widget.currentUserUsername, 
@@ -969,6 +1007,11 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                     adminUID: ds['adminUID'],
                                     subject: ds['subject'],
                                     body: ds['body'],
+                                    trackURL: ds['typeOfPost'] == 'feedback' ? ds['trackURL'] : 'null',
+                                    trackDuration: ds['typeOfPost'] == 'feedback' ? ds['trackDuration'] : 0.0,
+                                    postContainerTrackDivisions: ds['typeOfPost'] == 'feedback' ? ds['divisions'] : 0,
+                                    postContainerTrackStartParticular: ds['typeOfPost'] == 'feedback' ? ds['startParticularPart'] : 0.0,
+                                    postContainerTrackEndParticular: ds['typeOfPost'] == 'feedback' ? ds['endParticularPart'] : 0.0,
                                     likes: ds['likes'],
                                     likedBy: arrayOfLikes,
                                     fires: ds['fires'],
@@ -979,6 +1022,10 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                     commentedBy: ds['commentedBy'],
                                     reactedBy: ds['reactedBy'],
                                     savedBy: arrayOfSavedBy,
+                                    postContainerAudioPlayer: postContainerAudioPlayer,
+                                    postContainerDurationTrack: postContainerDurationTrack,
+                                    postContainerCurrentPositionTrack: postContainerCurrentPositionTrack,
+                                    postContainerTrackDragStart: postContainerTrackDragStart,
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
                                     adminNotificationsToken: ds['adminNotificationsToken'],

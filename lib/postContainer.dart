@@ -3,6 +3,7 @@ import 'package:flanger_web_version/requestList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'commentContainer.dart';
 
@@ -36,6 +37,9 @@ class PostContainer extends StatefulWidget {
   String adminUID;
   String subject;
   String body;
+  String trackURL;
+  double trackDuration;
+
   //likes
   int likes;
   List<dynamic> likedBy;
@@ -52,6 +56,15 @@ class PostContainer extends StatefulWidget {
   Map<dynamic, dynamic> reactedBy;
   //SavedBy
   List<dynamic> savedBy;
+
+  //AudioPlayerVariables
+  AudioPlayer postContainerAudioPlayer;
+  Duration postContainerDurationTrack;
+  Duration postContainerCurrentPositionTrack;
+  double postContainerTrackDragStart;
+  int postContainerTrackDivisions;
+  double postContainerTrackStartParticular;
+  double postContainerTrackEndParticular;
 
   //Admin
   String adminProfilephoto;
@@ -85,6 +98,8 @@ class PostContainer extends StatefulWidget {
     this.adminUID,
     this.subject,
     this.body,
+    this.trackURL,
+    this.trackDuration,
     this.likes,
     this.likedBy,
     this.fires,
@@ -95,6 +110,15 @@ class PostContainer extends StatefulWidget {
     this.commentedBy,
     this.reactedBy,
     this.savedBy,
+    // AudioPlayers variables
+    this.postContainerAudioPlayer,
+    this.postContainerDurationTrack,
+    this.postContainerCurrentPositionTrack,
+    this.postContainerTrackDragStart,
+    this.postContainerTrackDivisions,
+    this.postContainerTrackStartParticular,
+    this.postContainerTrackEndParticular,
+    //
     this.adminProfilephoto,
     this.adminUsername,
     this.adminNotificationsToken,
@@ -112,6 +136,15 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
   bool get wantKeepAlive => true;
 
   bool _uploadInProgress = false;
+  String _trackURLPlaying = '';
+
+
+
+  ScrollController _categoriesfeedbackListViewController = new ScrollController();
+  int feedbackCategorieChoose;
+  
+
+
 
   final postSaved = new SnackBar(
     backgroundColor: Colors.deepPurpleAccent,
@@ -711,6 +744,238 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
               ),
               ),*/
             ),
+            // IF FEEDBACK CONTAINER
+            widget.typeOfPost == 'feedback'
+            ? new Padding(
+              padding: EdgeInsets.only(top: 20.0,left: 0.0, right: 0.0, bottom: 40.0),
+              child: new Container(
+                height: 100.0,
+                               child: new Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                new Padding(
+                                  padding: EdgeInsets.only(top: 0.0),
+                                  child: new Center(
+                                    child: new Text('A specific part was put forward by ' + widget.adminUsername,
+                                    style: new TextStyle(color: Color(0xffBF88FF), fontSize: 12.0, fontWeight: FontWeight.normal),
+                                    ),
+                                  ),
+                                ),
+                                new Padding(
+                                  padding: EdgeInsets.only(top: 10.0, left: 30.0, right: 30.0),
+                                  child: new Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      new Padding(
+                                        padding: EdgeInsets.only(bottom: 10.0),
+                                      child: new IconButton(
+                                        splashColor: Colors.transparent,
+                                        highlightColor: Colors.transparent,
+                                        focusColor: Colors.transparent,
+                                        icon: new Icon(
+                                        widget.postContainerAudioPlayer.playerState.processingState == ProcessingState.loading
+                                       ? new CircularProgressIndicator(
+                                         valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                                       )
+                                       : widget.postContainerAudioPlayer.playerState.playing == true 
+                                       ? CupertinoIcons.pause_circle_fill
+                                       : CupertinoIcons.play_circle_fill,
+                                        size: 40.0,
+                                        color: Colors.white,
+                                        ), 
+                                        onPressed: () async {
+                                          if(_trackURLPlaying != widget.trackURL) {
+                                            setState(() {
+                                              _trackURLPlaying = widget.trackURL;
+                                            });
+                                          ////////////////////
+                                          await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
+                                            widget.postContainerAudioPlayer.durationStream.listen((event) {
+                                              setState(() {
+                                                widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
+                                              });
+                                              widget.postContainerAudioPlayer.positionStream.listen((event) {
+                                                setState(() {
+                                                  widget.postContainerCurrentPositionTrack = event;
+                                                });
+                                                //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                                print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
+                                                 if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
+                                                   print('AudioPlayer: Extract finished');
+                                                   widget.postContainerAudioPlayer.pause();
+                                                  }
+                                              });
+                                              widget.postContainerAudioPlayer.play();
+                                            });
+                                          });
+                                          } else if(_trackURLPlaying == widget.trackURL
+                                            && widget.postContainerAudioPlayer.playerState.playing == false
+                                            && ((widget.postContainerTrackDragStart > widget.postContainerCurrentPositionTrack.inMilliseconds) || (widget.postContainerTrackDragStart < widget.postContainerCurrentPositionTrack.inMilliseconds))) {
+                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
+                                              print('AudioPlayer : play after seek');
+                                              widget.postContainerAudioPlayer.play();
+                                            });
+                                        
+                                          } else if(_trackURLPlaying == widget.trackURL
+                                          && widget.postContainerAudioPlayer.playerState.playing == true) {
+                                            print('AudioPlayer : Pause');
+                                            widget.postContainerAudioPlayer.pause();
+                                          }
+                                          /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
+                                            widget.postContainerAudioPlayer.pause();
+                                          } else {
+                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
+                                              print('AudioPlayer: Start is seeked');
+                                            widget.postContainerAudioPlayer.play();
+                                            });
+                                          }*/
+                                        },
+                                      ),
+                                      ),
+                                      new Padding(
+                                        padding: EdgeInsets.only(left: 20.0),
+                                        child: new Container(
+                                          height: 50.0,
+                                          width: 450.0,
+                                          decoration: new BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: new BorderRadius.circular(40.0)
+                                          ),
+                                          child: new Stack(
+                                            children: [
+                                                new SliderTheme(
+                                                  data: Theme.of(context).sliderTheme.copyWith(
+                                                    trackHeight: 20.0,
+                                                    disabledThumbColor: Colors.transparent,
+                                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                                    thumbColor: Colors.grey[900],
+                                                    //disabledThumbColor: Colors.transparent,
+                                                    //trackShape: RoundedRectSliderTrackShape(),
+                                                    //inactiveTrackColor: Colors.grey[900],
+                                                    inactiveTrackColor: Colors.grey[900],
+                                                    activeTrackColor: Color(0xffBF88FF),
+                                                   // disabledInactiveTickMarkColor: Colors.transparent,
+                                                    //activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                                    //inactiveTickMarkColor: Colors.grey[600],
+                                                   // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                                  ),
+                                                child: ExcludeSemantics(
+                                                child: new RangeSlider(
+                                                  labels: RangeLabels('',''),
+                                                  min: 0.0,
+                                                  max: 222693,
+                                                  values: new RangeValues(widget.postContainerTrackStartParticular.toDouble(), widget.postContainerTrackEndParticular.toDouble()),
+                                                  onChangeStart: (value) {},
+                                                  onChanged: (value) {},
+                                                  divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
+                                                  ),
+                                                )),
+                                                new SliderTheme(
+                                                  data: Theme.of(context).sliderTheme.copyWith(
+                                                    trackHeight: 20.0,
+                                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                                    thumbColor: Colors.deepPurpleAccent,
+                                                    //disabledThumbColor: Colors.transparent,
+                                                    //trackShape: RoundedRectSliderTrackShape(),
+                                                    inactiveTrackColor: Colors.transparent,
+                                                    activeTrackColor: Colors.deepPurple.withOpacity(0.2),
+                                                   // disabledInactiveTickMarkColor: Colors.transparent,
+                                                    activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                                    inactiveTickMarkColor: Colors.grey[600],
+                                                   // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                                  ),
+                                                child: new Slider(
+                                                  label: new Duration(milliseconds: (widget.postContainerTrackDragStart).toInt()).toString().split('.')[0],
+                                                  min: 0.0,
+                                                  max: 222693,
+                                                  value: widget.postContainerAudioPlayer.playerState.playing == true ? widget.postContainerCurrentPositionTrack.inMilliseconds.toDouble() : widget.postContainerTrackDragStart,
+                                                  onChangeStart: (value) {
+                                                    if(widget.postContainerAudioPlayer.playerState.playing == true) {
+                                                      widget.postContainerAudioPlayer.pause();
+                                                    }
+                                                  },
+                                                  onChanged: (value) {
+                                                    setState((){
+                                                      widget.postContainerTrackDragStart = value;
+                                                    });
+                                                  },
+                                                  divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        ),
+                                   /*new Padding(
+                                     padding: EdgeInsets.only(bottom: 10.0),
+                                     child: new Row(
+                                       mainAxisAlignment: MainAxisAlignment.center,
+                                       children: [
+                                         new IconButton(
+                                           focusColor: Colors.transparent,
+                                           splashColor: Colors.transparent,
+                                           highlightColor: Colors.transparent,
+                                           icon: Icon(CupertinoIcons.minus_circled, color: Colors.deepPurpleAccent.withOpacity(0.5), size: 30.0), 
+                                           onPressed: () {
+                                             if(divisionsTrack > 2) {
+                                               setState((){
+                                                 divisionsTrack--;
+                                               });
+                                             } else {
+                                               print('sorry minimum 2');
+                                             }
+                                           }),
+                                         new IconButton(
+                                           focusColor: Colors.transparent,
+                                           splashColor: Colors.transparent,
+                                           highlightColor: Colors.transparent,
+                                           icon: Icon(CupertinoIcons.add_circled, color: Colors.deepPurpleAccent.withOpacity(0.8), size: 30.0), 
+                                           onPressed: () {
+                                             if(divisionsTrack <= 9) {
+                                               setState((){
+                                                 divisionsTrack++;
+                                               });
+                                             } else {
+                                               print('sorry maximum 10');
+                                             }
+                                           }),
+                                       ],
+                                     ),
+                                   ),*/
+                                    ],
+                                  ),
+                                  ),
+                                  new Padding(
+                                    padding: EdgeInsets.only(top: 10.0),
+                                    child: new Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        new Text('Duration :',
+                                        style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.bold),
+                                        ),
+                                        new Padding(
+                                          padding: EdgeInsets.only(left: 5.0),
+                                          child: new Text(
+                                          widget.postContainerDurationTrack != null && widget. postContainerCurrentPositionTrack != null
+                                          ? 
+                                          (widget.postContainerAudioPlayer.playerState.playing == true
+                                          ? Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerCurrentPositionTrack.inMilliseconds).toInt()).toString().split('.')[0]
+                                          : Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerTrackDragStart).toInt()).toString().split('.')[0]
+                                          )
+                                          : Duration(milliseconds: (widget.trackDuration).toInt()).toString().split('.')[0],
+                                          style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.normal),
+                                        
+                                         //_dragValueEndFeedback.toInt().round()).toString().split('.')[0]
+                                        ),
+                                          ),
+                                      ],
+                                    )
+                                    ),
+                                  ],
+                                ),
+              ),
+            )
+            : new Container(),
             new Padding(
               padding: EdgeInsets.only(left: 30.0),
               child: new Row(
@@ -887,9 +1152,143 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
               ],
               ),
             ),
+            //Categories feedback container
+            widget.typeOfPost == 'feedback'
+            ?  new Padding(
+              padding: EdgeInsets.only(top: 40.0),
+              child: new Container(
+                height: 35.0,
+                child: new ListView.builder(
+                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                  controller: _categoriesfeedbackListViewController,
+                  physics: new ScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 11,
+                  itemBuilder: (BuildContext context, int index) {
+                    return new Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                    child: new InkWell(
+                      onTap: () {
+                        switch(index) {
+                          case 0: setState(() {feedbackCategorieChoose = 0;});
+                          break;
+                          case 1: setState(() {feedbackCategorieChoose = 1;});
+                          break;
+                          case 2: setState(() {feedbackCategorieChoose = 2;});
+                          break;
+                          case 3: setState(() {feedbackCategorieChoose = 3;});
+                          break;
+                          case 4: setState(() {feedbackCategorieChoose = 4;});
+                          break;
+                          case 5: setState(() {feedbackCategorieChoose = 5;});
+                          break;
+                          case 6: setState(() {feedbackCategorieChoose = 6;});
+                          break;
+                          case 7: setState(() {feedbackCategorieChoose = 7;});
+                          break;
+                          case 8: setState(() {feedbackCategorieChoose = 8;});
+                          break;
+                          case 9: setState(() {feedbackCategorieChoose = 9;});
+                          break;
+                          case 10: setState(() {feedbackCategorieChoose = 10;});
+                        }
+                      },
+                      borderRadius: new BorderRadius.circular(30.0),
+                    child: new Container(
+                      height: 20.0,
+                      width: 100.0,
+                      decoration: new BoxDecoration(
+                        color: feedbackCategorieChoose == 0 && index == 0
+                          ? Colors.lightBlue[400]
+                          : feedbackCategorieChoose == 1 && index == 1
+                          ? Colors.deepOrange[400]
+                          : feedbackCategorieChoose == 2 && index == 2
+                          ? Colors.purple[400]
+                          : feedbackCategorieChoose == 3 && index == 3
+                          ? Colors.amber[400]
+                          : feedbackCategorieChoose == 4 && index == 4
+                          ? Colors.indigoAccent[400]
+                          : feedbackCategorieChoose == 5 && index == 5
+                          ? Colors.lightGreen[400]
+                          : feedbackCategorieChoose == 6 && index == 6
+                          ? Colors.blueGrey[400]
+                          : feedbackCategorieChoose == 7 && index == 7
+                          ? Colors.pink[400]
+                          : feedbackCategorieChoose == 8 && index == 8
+                          ? Colors.yellow[400]
+                          : feedbackCategorieChoose == 9 && index == 9
+                          ? Colors.purpleAccent[400]
+                          : feedbackCategorieChoose == 10 && index == 10
+                          ? Colors.deepPurple[400]
+                          : Colors.black,
+                        borderRadius: new BorderRadius.circular(30.0),
+                        border: new Border.all(
+                          width: 2.0,
+                          color: index == 0
+                          ? Colors.lightBlue[400]
+                          : index == 1
+                          ? Colors.deepOrange[400]
+                          : index == 2
+                          ? Colors.purple[400]
+                          : index == 3
+                          ? Colors.amber[400]
+                          : index == 4
+                          ? Colors.indigoAccent[400]
+                          : index == 5
+                          ? Colors.lightGreen[400]
+                          : index == 6
+                          ? Colors.blueGrey[400]
+                          : index == 7
+                          ? Colors.pink[400]
+                          : index == 8
+                          ? Colors.yellow[400]
+                          : index == 9
+                          ? Colors.purpleAccent[400]
+                          : index == 10
+                          ? Colors.deepPurple[400]
+                          : Colors.transparent,
+
+                        ),
+                      ),
+                      child: new Center(
+                        child: new Text(
+                          index == 0
+                          ? 'Melodies'
+                          : index == 1
+                          ? 'Vocals'
+                          : index == 2
+                          ? 'Sound Design'
+                          : index == 3
+                          ? 'Composition'
+                          : index == 4
+                          ? 'Drums'
+                          : index == 5
+                          ? 'Bass'
+                          : index == 6
+                          ? 'Automation'
+                          : index == 7
+                          ? 'Mixing'
+                          : index == 8
+                          ? 'Mastering'
+                          : index == 9
+                          ? 'Music theory'
+                          : index == 10
+                          ? 'Filling up'
+                          : Colors.transparent,
+                        style: new TextStyle(color:feedbackCategorieChoose == index ? Colors.black : Colors.white, fontSize: 13.0, fontWeight: feedbackCategorieChoose == index ? FontWeight.bold : FontWeight.normal),
+                        ),
+                      ),
+                      ),
+                      ),
+                    );
+                  },
+                ),
+                ),
+              )
+              : new Container(),
             //TextEditingController
              new Padding(
-              padding: EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0, bottom: 10.0),
+              padding: EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0, bottom: 0.0),
               child: new Container(
                 constraints: new BoxConstraints(
                   minHeight: 50.0,
