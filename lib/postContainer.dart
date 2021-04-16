@@ -31,6 +31,7 @@ class PostContainer extends StatefulWidget {
   int index;
   List<TextEditingController> listTextEditingController;
   List<FocusNode> listFocusNodeController;
+  List<List<int>> listfeedbackCategories;
   String postID;
   String typeOfPost;
   int timestamp;
@@ -92,6 +93,7 @@ class PostContainer extends StatefulWidget {
     this.index,
     this.listTextEditingController,
     this.listFocusNodeController,
+    this.listfeedbackCategories,
     this.postID,
     this.typeOfPost,
     this.timestamp,
@@ -137,11 +139,14 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
 
   bool _uploadInProgress = false;
   String _trackURLPlaying = '';
+  bool _showListOfFeedbackTags = false;
 
 
 
   ScrollController _categoriesfeedbackListViewController = new ScrollController();
+  ScrollController _listFeedbackCategorieAdded = new ScrollController();
   int feedbackCategorieChoose;
+  bool aboutSpecificPartTrack = true;
   
 
 
@@ -164,6 +169,13 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
     textAlign: TextAlign.center,
     style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
     ));
+
+
+  @override
+  void initState() {
+    print('listfeedbackCategories = ' + widget.listfeedbackCategories[widget.index].toString());
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -757,7 +769,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                   padding: EdgeInsets.only(top: 0.0),
                                   child: new Center(
                                     child: new Text('A specific part was put forward by ' + widget.adminUsername,
-                                    style: new TextStyle(color: Color(0xffBF88FF), fontSize: 12.0, fontWeight: FontWeight.normal),
+                                    style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.normal),
                                     ),
                                   ),
                                 ),
@@ -1155,8 +1167,131 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
             //Categories feedback container
             widget.typeOfPost == 'feedback'
             ?  new Padding(
-              padding: EdgeInsets.only(top: 40.0),
+              padding: EdgeInsets.only(top: 40.0, left: 20.0, right: 20.0),
               child: new Container(
+                height: 130.0,
+                decoration: new BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: new BorderRadius.circular(10.0),
+                ),
+                child: new Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        new Padding(
+                          padding: EdgeInsets.only(left: 20.0),
+                          child: new RichText(
+                            text: new TextSpan(
+                              text: 'Choose feedback categories ',
+                              style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.w500),
+                              children: [
+                                new TextSpan(
+                                  text: ' (Maximum categories : 3)',
+                                  style: new TextStyle(color: Colors.grey, fontSize: 12.0, fontWeight: FontWeight.normal),
+                                ),
+                              ]
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        new Padding(
+                          padding: EdgeInsets.only(left: 20.0),
+                          child: new IconButton(
+                            icon: new Icon(CupertinoIcons.add_circled,
+                            color: Colors.deepPurpleAccent,
+                            size: 30.0,
+                            ), 
+                            onPressed: () {
+                              setState(() {
+                                print('tag presents on this list' + widget.listfeedbackCategories[widget.index].toString());
+                              });
+                            }),
+                        ),
+                        new Padding(
+                          padding: EdgeInsets.only(left: 0.0, top: 5.0),
+                          child: widget.listfeedbackCategories[widget.index].isEmpty
+                          ? new Text('Add a tag',
+                          style: new TextStyle(color: Colors.grey, fontSize: 13.0),
+                          )
+                          : new Container(
+                            height: 30.0,
+                          child: new ListView.builder(
+                            controller: _listFeedbackCategorieAdded,
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            physics: new ScrollPhysics(),
+                            itemCount: widget.listfeedbackCategories[widget.index].length,
+                            itemBuilder: (BuildContext context, int index){
+                            return new Padding(
+                              padding: EdgeInsets.only(left: 10.0),
+                              child: new Chip(
+                                onDeleted: (){},
+                                backgroundColor: 
+                                widget.listfeedbackCategories[widget.index][index] == 0
+                              ? Colors.lightBlue[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 1
+                              ? Colors.blueGrey[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 2
+                              ? Colors.purple[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 3
+                              ? Colors.cyanAccent
+                              : widget.listfeedbackCategories[widget.index][index] == 4
+                              ? Colors.indigoAccent[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 5
+                              ? Color(0xff68FA1E)
+                              :  widget.listfeedbackCategories[widget.index][index] == 6
+                              ? Colors.indigo
+                              :  widget.listfeedbackCategories[widget.index][index] == 7
+                              ? Colors.pink[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 8
+                              ? Colors.yellow[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 9
+                              ? Colors.purpleAccent[400]
+                              :  widget.listfeedbackCategories[widget.index][index] == 10
+                              ? Colors.deepPurple[400]
+                              : Colors.black,
+                                label: new Text(
+                                  widget.listfeedbackCategories[widget.index][index] == 0
+                                  ? 'Melodies'
+                                  : widget.listfeedbackCategories[widget.index][index] == 1
+                                  ? 'Vocals'
+                                  : widget.listfeedbackCategories[widget.index][index] == 2
+                                  ? 'Sound Design'
+                                  : widget.listfeedbackCategories[widget.index][index] == 3
+                                  ? 'Composition'
+                                  : widget.listfeedbackCategories[widget.index][index] == 4
+                                  ? 'Drums'
+                                  : widget.listfeedbackCategories[widget.index][index] == 5
+                                  ? 'Bass'
+                                  : widget.listfeedbackCategories[widget.index][index] == 6
+                                  ? 'Automation'
+                                  : widget.listfeedbackCategories[widget.index][index] == 7
+                                  ? 'Mixing'
+                                  : widget.listfeedbackCategories[widget.index][index] == 8
+                                  ? 'Mastering'
+                                  : widget.listfeedbackCategories[widget.index][index] == 9
+                                  ? 'Music theory'
+                                  : widget.listfeedbackCategories[widget.index][index] == 10
+                                  ? 'Filling up'
+                                  : 'Melodies',
+                                style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                ),
+                            ),
+                            );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                    new Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                      child: new Container(
                 height: 35.0,
                 child: new ListView.builder(
                   padding: EdgeInsets.only(left: 10.0, right: 10.0),
@@ -1167,7 +1302,122 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   itemBuilder: (BuildContext context, int index) {
                     return new Padding(
                       padding: EdgeInsets.only(left: 10.0),
-                    child: new InkWell(
+                      child: widget.listfeedbackCategories[widget.index].contains(index) == false
+                      ? new Chip(
+                          deleteButtonTooltipMessage: 'Add',
+                          deleteIcon: new Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 20.0),
+                          onDeleted: () {
+                            if(widget.listfeedbackCategories[widget.index].length >= 3) {
+                              print('Maximum reached');
+                            } else {
+                            switch(index) {
+                              case 0: 
+                              setState(() {widget.listfeedbackCategories[widget.index].add(0);});
+                              break;
+                              case 1: setState(() {widget.listfeedbackCategories[widget.index].add(1);});
+                              break;
+                              case 2: setState(() {widget.listfeedbackCategories[widget.index].add(2);});
+                              break;
+                              case 3: setState(() {widget.listfeedbackCategories[widget.index].add(3);});
+                              break;
+                              case 4: setState(() {widget.listfeedbackCategories[widget.index].add(4);});
+                              break;
+                              case 5: setState(() {widget.listfeedbackCategories[widget.index].add(5);});
+                              break;
+                              case 6: setState(() {widget.listfeedbackCategories[widget.index].add(6);});
+                              break;
+                              case 7: setState(() {widget.listfeedbackCategories[widget.index].add(7);});
+                              break;
+                              case 8: setState(() {widget.listfeedbackCategories[widget.index].add(8);});
+                              break;
+                              case 9: setState(() {widget.listfeedbackCategories[widget.index].add(9);});
+                              break;
+                              case 10: setState(() {widget.listfeedbackCategories[widget.index].add(10);});
+                              break;
+                              default: print('error switch categorie feedback');
+                            }
+                            }
+                          },
+                          side: BorderSide(
+                            color: index == 0
+                              ? Colors.lightBlue[400]
+                              :  index == 1
+                              ? Colors.blueGrey[400]
+                              :  index == 2
+                              ? Colors.purple[400]
+                              :  index == 3
+                              ? Colors.cyanAccent
+                              : index == 4
+                              ? Colors.indigoAccent[400]
+                              :  index == 5
+                              ? Color(0xff68FA1E)
+                              :  index == 6
+                              ? Colors.indigo
+                              :  index == 7
+                              ? Colors.pink[400]
+                              :  index == 8
+                              ? Colors.yellow[400]
+                              :  index == 9
+                              ? Colors.purpleAccent[400]
+                              :  index == 10
+                              ? Colors.deepPurple[400]
+                              : Colors.black,
+                          ),
+                          backgroundColor: Colors.black,
+                            label: new Text(
+                              index == 0
+                              ? 'Melodies'
+                              : index == 1
+                              ? 'Vocals'
+                              : index == 2
+                              ? 'Sound Design'
+                              : index == 3
+                              ? 'Composition'
+                              : index == 4
+                              ? 'Drums'
+                              : index == 5
+                              ? 'Bass'
+                              : index == 6
+                              ? 'Automation'
+                              : index == 7
+                              ? 'Mixing'
+                              : index == 8
+                              ? 'Mastering'
+                              : index == 9
+                              ? 'Music theory'
+                              : index == 10
+                              ? 'Filling up'
+                              : 'Melodies',
+                            style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                            ),
+                          )
+                        : new Container(),
+                    );
+                  },
+                ),
+                ),
+                    ),
+                  ],
+                ),
+              ),
+              /*child: new Container(
+                height: 35.0,
+                child: new ListView.builder(
+                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                  controller: _categoriesfeedbackListViewController,
+                  physics: new ScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 11,
+                  itemBuilder: (BuildContext context, int index) {
+                    return new Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                      child: new Chip(
+                 
+                        backgroundColor: Colors.pink,
+                        label : new Text('Melodies'),
+                        onDeleted: () {},
+                          ),
+                   /*child: new InkWell(
                       onTap: () {
                         switch(index) {
                           case 0: setState(() {feedbackCategorieChoose = 0;});
@@ -1191,6 +1441,8 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           case 9: setState(() {feedbackCategorieChoose = 9;});
                           break;
                           case 10: setState(() {feedbackCategorieChoose = 10;});
+                          break;
+                          default: print('error switch categorie feedback');
                         }
                       },
                       borderRadius: new BorderRadius.circular(30.0),
@@ -1201,17 +1453,17 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                         color: feedbackCategorieChoose == 0 && index == 0
                           ? Colors.lightBlue[400]
                           : feedbackCategorieChoose == 1 && index == 1
-                          ? Colors.deepOrange[400]
+                          ? Colors.blueGrey[400]
                           : feedbackCategorieChoose == 2 && index == 2
                           ? Colors.purple[400]
                           : feedbackCategorieChoose == 3 && index == 3
-                          ? Colors.amber[400]
+                          ? Colors.cyanAccent
                           : feedbackCategorieChoose == 4 && index == 4
                           ? Colors.indigoAccent[400]
                           : feedbackCategorieChoose == 5 && index == 5
-                          ? Colors.lightGreen[400]
+                          ? Color(0xff68FA1E)
                           : feedbackCategorieChoose == 6 && index == 6
-                          ? Colors.blueGrey[400]
+                          ? Colors.indigo
                           : feedbackCategorieChoose == 7 && index == 7
                           ? Colors.pink[400]
                           : feedbackCategorieChoose == 8 && index == 8
@@ -1227,17 +1479,17 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           color: index == 0
                           ? Colors.lightBlue[400]
                           : index == 1
-                          ? Colors.deepOrange[400]
+                          ? Colors.blueGrey[400]
                           : index == 2
                           ? Colors.purple[400]
                           : index == 3
-                          ? Colors.amber[400]
+                          ? Colors.cyanAccent
                           : index == 4
                           ? Colors.indigoAccent[400]
                           : index == 5
-                          ? Colors.lightGreen[400]
+                          ? Color(0xff68FA1E)
                           : index == 6
-                          ? Colors.blueGrey[400]
+                          ? Colors.indigo
                           : index == 7
                           ? Colors.pink[400]
                           : index == 8
@@ -1274,18 +1526,54 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           ? 'Music theory'
                           : index == 10
                           ? 'Filling up'
-                          : Colors.transparent,
+                          : 'Melodies',
                         style: new TextStyle(color:feedbackCategorieChoose == index ? Colors.black : Colors.white, fontSize: 13.0, fontWeight: feedbackCategorieChoose == index ? FontWeight.bold : FontWeight.normal),
                         ),
                       ),
                       ),
-                      ),
+                      ),*/
                     );
                   },
                 ),
-                ),
+                ),*/
               )
               : new Container(),
+            widget.typeOfPost == 'feedback'
+            ? new Padding(
+              padding: EdgeInsets.only(top: 20.0, left: 20.0),
+            child: new Container(
+              height: 30.0,
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  new Switch(
+                    activeColor: Color(0xffBF88FF),
+                    activeTrackColor: Color(0xffBF88FF).withOpacity(0.5),
+                    inactiveTrackColor: Colors.grey[900],
+                    value: aboutSpecificPartTrack, 
+                    onChanged: (value) {
+                      setState(() {
+                        aboutSpecificPartTrack =! aboutSpecificPartTrack;
+                      });
+                    }),
+                  new Padding(
+                    padding: EdgeInsets.only(left: 15.0),
+                    child: new Text(
+                      aboutSpecificPartTrack == true
+                      ? 'This comment is about the specific part'
+                      : 'This comment is not about the specific part',
+                      style: new TextStyle(color: aboutSpecificPartTrack == true ? Colors.white : Colors.grey[600], fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                      wordSpacing: 1.0,
+                      letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ),
+            )
+            : new Container(),
             //TextEditingController
              new Padding(
               padding: EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0, bottom: 0.0),
@@ -1324,8 +1612,76 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     suffixIcon: new IconButton(
                       icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: widget.listTextEditingController[widget.index].text.length > 0 ? Colors.cyanAccent :  Colors.grey[600], size: 25.0),
                       onPressed: () {
-                            if(widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
+                        if(widget.typeOfPost == 'feedback' && widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
+                          if(feedbackCategorieChoose != null ) {
+                            print('feedback comment go');
                             setState(() {
+                              _uploadInProgress = true;
+                            });
+                            widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
+                            int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+                            FirebaseFirestore.instance
+                              .collection('test')
+                              .doc(widget.postID)
+                              .collection('comments')
+                              .doc('$_timestampCreation${widget.currentUserUsername}')
+                              .set({
+                                'feedbackCategorie': feedbackCategorieChoose,
+                                'aboutSpecificPartTrack': aboutSpecificPartTrack,
+                                'adminUID': widget.adminUID,
+                                'commentatorProfilephoto': widget.currentUserPhoto,
+                                'commentatorSoundCloud': widget.currentSoundCloud,
+                                'commentatorUID': widget.currentUser,
+                                'commentatorUsername': widget.currentUserUsername,
+                                'content': widget.listTextEditingController[widget.index].value.text,
+                                'postID': widget.postID,
+                                'subject': widget.subject,
+                                'timestamp': _timestampCreation,
+                              }).whenComplete(() {
+                               widget.listTextEditingController[widget.index].clear();
+                               setState((){
+                                 _uploadInProgress = false;
+                                 });
+                                FirebaseFirestore.instance
+                                  .collection('test')
+                                  .doc(widget.postID)
+                                  .update({
+                                    'comments': FieldValue.increment(1),
+                                    'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                    'reactedBy': widget.reactedBy,
+                                  }).whenComplete(() {
+                                    widget.reactedBy.forEach((key, value) {
+                                      if(key == widget.currentUser) {
+                                        print('No send notification here cause it is current user.');
+                                      } else {
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(key.toString())
+                                        .collection('notifications')
+                                        .doc(_timestampCreation.toString()+widget.currentUser)
+                                        .set({
+                                          'alreadySeen': false,
+                                          'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                          'body': 'has commented this feedback request 🎹 ($feedbackCategorieChoose) : ' + widget.listTextEditingController[widget.index].value.text,
+                                          'currentNotificationsToken': value.toString(),
+                                          'lastUserProfilephoto': widget.currentUserPhoto,
+                                          'lastUserUID': widget.currentUser,
+                                          'lastUserUsername': widget.currentUserUsername,
+                                          'postID': widget.postID,
+                                          'title': widget.subject,
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore : notifications updated for $key');
+                                          widget.listFocusNodeController[widget.index].unfocus();
+                                        });
+                                      }
+                                    });
+                                  });
+                              });
+                          } else {
+                            print('Choose a category');
+                          }
+                        } else if(((widget.typeOfPost == 'issue') || (widget.typeOfPost == 'tip') || (widget.typeOfPost == 'project') ) && widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
+                           /* setState(() {
                               _uploadInProgress = true;
                             });
                             widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
@@ -1384,7 +1740,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                       }
                                     });
                                   });
-                              });
+                              });*/
                             }
                       },
                     ),
@@ -1449,6 +1805,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                  currentMixcloud: widget.currentMixcloud,
                  currentNotificationsToken: widget.currentNotificationsToken,
                  postID: widget.postID,
+                 typeOfPost: widget.typeOfPost,
                  reactedBy: widget.reactedBy,
                  homeContext: widget.homeContext,
                 )

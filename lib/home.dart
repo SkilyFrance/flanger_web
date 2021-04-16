@@ -69,7 +69,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   List<bool> listIsExpanded = [];
   List<TextEditingController> listTextEditingController = [];
   List<FocusNode> listFocusNodeController = [];
+  List<int> subListFeedbackCategorie = [];
   ScrollController _feedScrollController = new ScrollController();
+
 
 
   //PostEditing controller
@@ -978,6 +980,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             listIsExpanded.add(false);
                             listTextEditingController.add(TextEditingController());
                             listFocusNodeController.add(FocusNode());
+                            List<List<int>> listfeedbackCategories = List<List<int>>.filled(snapshot.data.docs.length, subListFeedbackCategorie, growable: true);
                             return new Padding(
                               padding: EdgeInsets.only(top: 20.0, right: 50.0, left: 50.0),
                               child: new Column(
@@ -1001,6 +1004,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                     index: index,
                                     listTextEditingController: listTextEditingController,
                                     listFocusNodeController: listFocusNodeController,
+                                    listfeedbackCategories: listfeedbackCategories,
                                     postID: ds['postID'],
                                     typeOfPost: ds['typeOfPost'],
                                     timestamp: ds['timestamp'],

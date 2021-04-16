@@ -79,7 +79,7 @@ class LandinPageState extends State<LandinPage> {
                   children: [
                     new Padding(
                       padding: EdgeInsets.only(bottom: 20.0),
-                      child: new Text('Discuss.',
+                      child: new Text('Share.',
                       style: new TextStyle(color: Colors.purpleAccent, fontSize: 25.0, fontWeight: FontWeight.w500))),
                       new Text('💬', style: new TextStyle(fontSize: 45.0)),
                   ],
@@ -147,7 +147,7 @@ class LandinPageState extends State<LandinPage> {
       ),
       child: new Center(
         child: new Text('START',
-        style: new TextStyle(color: Colors.cyanAccent, fontSize: 15.0, fontWeight: FontWeight.bold),
+        style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
         ),
       ),
     ));

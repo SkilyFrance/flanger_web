@@ -20,6 +20,7 @@ class CommentContainer extends StatefulWidget {
   String currentMixcloud;
   String currentNotificationsToken;
   String postID;
+  String typeOfPost;
   Map<dynamic, dynamic> reactedBy;
   BuildContext homeContext;
 
@@ -38,6 +39,7 @@ class CommentContainer extends StatefulWidget {
     this.currentMixcloud,
     this.currentNotificationsToken,
     this.postID,
+    this.typeOfPost,
     this.reactedBy,
     this.homeContext,
     }) : super(key: key);
@@ -73,7 +75,7 @@ class CommentContainerState extends State<CommentContainer> {
   List<FocusNode> listFocusNodeController = [];
   Stream<dynamic> fetchAllComments() {
     return FirebaseFirestore.instance
-      .collection('posts')
+      .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
       .doc(widget.postID)
       .collection('comments')
       .orderBy('timestamp', descending: true)
@@ -178,6 +180,101 @@ class CommentContainerState extends State<CommentContainer> {
                 child: new Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    widget.typeOfPost == 'feedback'
+                    ? new Padding(
+                      padding: EdgeInsets.only(top: 20.0, left: 20.0),
+                      child: new Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          new Container(
+                            height: 30.0,
+                            width: 100.0,
+                            decoration: new BoxDecoration(
+                              borderRadius: new BorderRadius.circular(30.0),
+                              color: ds['feedbackCategorie'] == 0
+                              ? Colors.lightBlue[400]
+                              : ds['feedbackCategorie'] == 1
+                              ? Colors.blueGrey[400]
+                              : ds['feedbackCategorie'] == 2
+                              ? Colors.purple[400]
+                              : ds['feedbackCategorie'] == 3
+                              ? Colors.cyanAccent
+                              : ds['feedbackCategorie'] == 4
+                              ? Colors.indigoAccent[400]
+                              : ds['feedbackCategorie'] == 5
+                              ? Color(0xff68FA1E)
+                              : ds['feedbackCategorie'] == 6
+                              ? Colors.indigo
+                              : ds['feedbackCategorie'] == 7
+                              ? Colors.pink[400]
+                              : ds['feedbackCategorie'] == 8
+                              ? Colors.yellow[400]
+                              : ds['feedbackCategorie'] == 9
+                              ? Colors.purpleAccent[400]
+                              : ds['feedbackCategorie'] == 10
+                              ? Colors.deepPurple[400]
+                              : Colors.transparent,
+                            ),
+                            child: new Center(
+                              child: new Text(
+                              ds['feedbackCategorie'] == 0
+                              ? 'Melodies'
+                              : ds['feedbackCategorie'] == 1
+                              ? 'Vocals'
+                              : ds['feedbackCategorie'] == 2
+                              ? 'Sound Design'
+                              : ds['feedbackCategorie'] == 3
+                              ? 'Composition'
+                              : ds['feedbackCategorie'] == 4
+                              ? 'Drums'
+                              : ds['feedbackCategorie'] == 5
+                              ? 'Bass'
+                              : ds['feedbackCategorie'] == 6
+                              ? 'Automation'
+                              : ds['feedbackCategorie'] == 7
+                              ? 'Mixing'
+                              : ds['feedbackCategorie'] == 8
+                              ? 'Mastering'
+                              : ds['feedbackCategorie'] == 9
+                              ? 'Music theory'
+                              : ds['feedbackCategorie'] == 10
+                              ? 'Filling up'
+                              : 'Melodies',
+                              style: new TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      )
+                    : new Container(),
+                    widget.typeOfPost == 'feedback'
+                    ? new Container(
+                      child: new Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          new Padding(
+                            padding: EdgeInsets.only(top: 10.0, left: 20.0),
+                            child: new Text(
+                              ds['aboutSpecificPartTrack'] == true
+                              ? 'About the specific part'
+                              : 'Not about the specific part',
+                              style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
+                            ),
+                            ),
+                          new Padding(padding: EdgeInsets.only(top: 10.0, left: 10.0),
+                          child: new Icon(
+                            ds['aboutSpecificPartTrack'] == true
+                            ? CupertinoIcons.check_mark_circled
+                            : CupertinoIcons.nosign,
+                            color: ds['aboutSpecificPartTrack'] == true ? Colors.green : Colors.grey[600],
+                            size: 20.0,
+                          )
+                          ),
+                        ],
+                      )
+                    )
+                    : new Container(),
                     new ListTile(
                     contentPadding: EdgeInsets.all(20.0),
                       leading: new InkWell(
