@@ -12,6 +12,7 @@ class PostContainer extends StatefulWidget {
 
   bool comesFromHome;
 
+
   //CurrentUserDatas
   String currentUser;
   String currentUserUsername;
@@ -139,6 +140,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
 
   bool _uploadInProgress = false;
   String _trackURLPlaying = '';
+  int _trackIsPlayingIndex; 
   bool _showListOfFeedbackTags = false;
 
 
@@ -170,11 +172,18 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
     style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
     ));
 
-
+    
   @override
   void initState() {
     print('listfeedbackCategories = ' + widget.listfeedbackCategories[widget.index].toString());
+    widget.postContainerAudioPlayer = new AudioPlayer();
     super.initState();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -733,12 +742,21 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
             ? new Padding(
               padding: EdgeInsets.only(top: 20.0,left: 0.0, right: 0.0, bottom: 40.0),
               child: new Container(
-                height: 100.0,
+                decoration: new BoxDecoration(
+                  borderRadius: new BorderRadius.circular(10.0),
+                  border: new Border.all(
+                    width: 2.0,
+                    color: widget.postContainerAudioPlayer.playerState.playing == true
+                    ? Colors.purple
+                    : Colors.transparent,
+                  ),
+                ),
+                height: 110.0,
                                child: new Column(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
                                 new Padding(
-                                  padding: EdgeInsets.only(top: 0.0),
+                                  padding: EdgeInsets.only(top: 2.0),
                                   child: new Center(
                                     child: new Text('A specific part was put forward by ' + widget.adminUsername,
                                     style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.normal),
@@ -757,42 +775,70 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                         highlightColor: Colors.transparent,
                                         focusColor: Colors.transparent,
                                         icon: new Icon(
-                                        widget.postContainerAudioPlayer.playerState.processingState == ProcessingState.loading
-                                       ? new CircularProgressIndicator(
-                                         valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-                                       )
-                                       : widget.postContainerAudioPlayer.playerState.playing == true 
+                                        widget.postContainerAudioPlayer.playerState.playing == true 
                                        ? CupertinoIcons.pause_circle_fill
                                        : CupertinoIcons.play_circle_fill,
                                         size: 40.0,
                                         color: Colors.white,
                                         ), 
                                         onPressed: () async {
-                                          if(_trackURLPlaying != widget.trackURL) {
+                                        if(_trackURLPlaying != widget.trackURL) {
+                                          if(_trackURLPlaying != '') {
+                                                   widget.postContainerAudioPlayer.stop().whenComplete(() async {
+                                                  setState(() {
+                                                    _trackURLPlaying = widget.trackURL;
+                                                  });
+                                                  await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
+                                                    widget.postContainerAudioPlayer.durationStream.listen((event) {
+                                                      setState(() {
+                                                        widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
+                                                      });
+                                                      widget.postContainerAudioPlayer.positionStream.listen((event) {
+                                                        setState(() {
+                                                          widget.postContainerCurrentPositionTrack = event;
+                                                        });
+                                                        //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                                      // print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds.toInt()).toString());
+                                                        if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
+                                                          print('AudioPlayer: Extract finished');
+                                                          widget.postContainerAudioPlayer.pause();
+                                                          }
+                                                      });
+                                                      widget.postContainerAudioPlayer.play();
+                                                    });
+                                                  });
+                                                  });
+                                                
+                                       
+                                          } else {
+                                            //_trackURLPlaying == ''
+                                            print('AudioPlayer : Play cause no track played yet');
                                             setState(() {
                                               _trackURLPlaying = widget.trackURL;
+                                              _trackIsPlayingIndex = widget.index;
                                             });
-                                          ////////////////////
-                                          await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
-                                            widget.postContainerAudioPlayer.durationStream.listen((event) {
-                                              setState(() {
-                                                widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
-                                              });
-                                              widget.postContainerAudioPlayer.positionStream.listen((event) {
+                                            await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
+                                              widget.postContainerAudioPlayer.durationStream.listen((event) {
                                                 setState(() {
-                                                  widget.postContainerCurrentPositionTrack = event;
+                                                  widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
                                                 });
-                                                //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
-                                                print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
-                                                 if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
-                                                   print('AudioPlayer: Extract finished');
-                                                   widget.postContainerAudioPlayer.pause();
-                                                  }
+                                                widget.postContainerAudioPlayer.positionStream.listen((event) {
+                                                  setState(() {
+                                                    widget.postContainerCurrentPositionTrack = event;
+                                                  });
+                                                  print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                                  print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
+                                                  if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
+                                                    print('AudioPlayer: Extract finished');
+                                                    widget.postContainerAudioPlayer.pause();
+                                                    }
+                                                });
+                                                widget.postContainerAudioPlayer.play();
                                               });
-                                              widget.postContainerAudioPlayer.play();
                                             });
-                                          });
-                                          } else if(_trackURLPlaying == widget.trackURL
+                                          }
+                                          
+                                        } else if(_trackURLPlaying == widget.trackURL
                                             && widget.postContainerAudioPlayer.playerState.playing == false
                                             && ((widget.postContainerTrackDragStart > widget.postContainerCurrentPositionTrack.inMilliseconds) || (widget.postContainerTrackDragStart < widget.postContainerCurrentPositionTrack.inMilliseconds))) {
                                             widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
@@ -805,6 +851,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                             print('AudioPlayer : Pause');
                                             widget.postContainerAudioPlayer.pause();
                                           }
+
                                           /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
                                             widget.postContainerAudioPlayer.pause();
                                           } else {
@@ -813,6 +860,62 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                             widget.postContainerAudioPlayer.play();
                                             });
                                           }*/
+                                        
+                                        /*else if(_trackURLPlaying == widget.trackURL && widget.postContainerAudioPlayer[widget.index].playerState.playing == false) {
+                                            print('AudioPlayer: Reprendre');
+                                            widget.postContainerAudioPlayer[widget.index].play();
+                                        }*/
+
+                                        
+
+                                      /*   if(_trackURLPlaying != widget.trackURL) {
+                                            setState(() {
+                                              _trackURLPlaying = widget.trackURL;
+                                            });
+                                          ////////////////////
+                                          await widget.postContainerAudioPlayer[widget.index].setUrl(widget.trackURL).whenComplete(() async {
+                                            widget.postContainerAudioPlayer[widget.index].durationStream.listen((event) {
+                                              setState(() {
+                                                widget.postContainerDurationTrack[widget.index] = widget.postContainerAudioPlayer[widget.index].duration;
+                                              });
+                                              widget.postContainerAudioPlayer[widget.index].positionStream.listen((event) {
+                                                setState(() {
+                                                  widget.postContainerCurrentPositionTrack[widget.index] = event;
+                                                });
+                                                //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                               // print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds.toInt()).toString());
+                                                 if(widget.postContainerCurrentPositionTrack[widget.index] >= Duration(milliseconds: widget.postContainerDurationTrack[widget.index].inMilliseconds.toInt())) {
+                                                   print('AudioPlayer: Extract finished');
+                                                   widget.postContainerAudioPlayer[widget.index].pause();
+                                                  }
+                                              });
+                                              widget.postContainerAudioPlayer[widget.index].play();
+                                            });
+                                          });
+
+                                          } else if(_trackURLPlaying == widget.trackURL
+                                            && widget.postContainerAudioPlayer[widget.index].playerState.playing == false
+                                            && ((widget.postContainerTrackDragStart[widget.index] > widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds) || (widget.postContainerTrackDragStart[widget.index] < widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds))) {
+                                            widget.postContainerAudioPlayer[widget.index].seek(Duration(milliseconds: widget.postContainerTrackDragStart[widget.index].toInt())).whenComplete(() {
+                                              print('AudioPlayer : play after seek');
+                                              widget.postContainerAudioPlayer[widget.index].play();
+                                            });
+                                        
+                                          } else if(_trackURLPlaying == widget.trackURL
+                                          && widget.postContainerAudioPlayer[widget.index].playerState.playing == true) {
+                                            print('AudioPlayer : Pause');
+                                            widget.postContainerAudioPlayer[widget.index].pause();
+                                          }*/
+
+                                          /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
+                                            widget.postContainerAudioPlayer.pause();
+                                          } else {
+                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
+                                              print('AudioPlayer: Start is seeked');
+                                            widget.postContainerAudioPlayer.play();
+                                            });
+                                          }*/
+                                          
                                         },
                                       ),
                                       ),
@@ -871,7 +974,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                                 child: new Slider(
                                                   label: new Duration(milliseconds: (widget.postContainerTrackDragStart).toInt()).toString().split('.')[0],
                                                   min: 0.0,
-                                                  max: 222693,
+                                                  max: widget.postContainerDurationTrack != null ? widget.postContainerDurationTrack.inMilliseconds.toDouble() : 120000,
                                                   value: widget.postContainerAudioPlayer.playerState.playing == true ? widget.postContainerCurrentPositionTrack.inMilliseconds.toDouble() : widget.postContainerTrackDragStart,
                                                   onChangeStart: (value) {
                                                     if(widget.postContainerAudioPlayer.playerState.playing == true) {

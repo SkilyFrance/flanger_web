@@ -362,10 +362,10 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     commentedBy: ds['commentedBy'],
                                     reactedBy: ds['reactedBy'],
                                     savedBy: arrayOfSavedBy,
-                                    postContainerAudioPlayer: postContainerAudioPlayer,
+                                   /* postContainerAudioPlayer: postContainerAudioPlayer,
                                     postContainerDurationTrack: postContainerDurationTrack,
                                     postContainerCurrentPositionTrack: postContainerCurrentPositionTrack,
-                                    postContainerTrackDragStart: postContainerTrackDragStart,
+                                    postContainerTrackDragStart: postContainerTrackDragStart,*/
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
                                     adminNotificationsToken: ds['adminNotificationsToken'],

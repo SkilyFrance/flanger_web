@@ -99,20 +99,21 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   // VARIABLES FOR POST A TRACK FOR FEEDBACK //
   AudioPlayer _feedbackAudioPlayer = new AudioPlayer();
   bool _musicIsUploaded = false;
+  bool _musicUploadedInProgress = false;
   File _musicUploaded;
   Duration durationFileUploaded; //= Duration(milliseconds: 120);
   Duration currentPositionFeedbackPlayer;//= = Duration(milliseconds: 10);
   Duration currentBufferingFeedbackPlayer;//= = Duration(milliseconds: 10);
   double _dragValueStartFeedback = 0;
-  double _dragValueEndFeedback = 10; //222693;
+  double _dragValueEndFeedback = 60000; //222693;
   int _trackSplitFeedback = 6;
   ///////////////////////////////////////
   
   // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
   AudioPlayer postContainerAudioPlayer = new AudioPlayer();
   List<int> subListFeedbackCategorie = [];
-  Duration postContainerDurationTrack;
-  Duration postContainerCurrentPositionTrack;
+  Duration postContainerDurationTrack = new Duration(milliseconds: 10);
+  Duration postContainerCurrentPositionTrack = new Duration(milliseconds: 10);
   double postContainerTrackDragStart = 0.0;
   ///////////////////////////////////////
 
@@ -171,6 +172,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   });
   }
 
+ bool _showStopAudioPlayer = false;
 
 @override
   void initState() {
@@ -193,7 +195,6 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
     postContainerAudioPlayer.dispose();
     super.dispose();
   }
-
 
 
   @override
@@ -286,15 +287,18 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                 new Padding(
                                   padding: EdgeInsets.only(top: 30.0),
                                   child: new Center(
-                                    child: new Text('Select a track from desktop',
-                                    style: new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: FontWeight.bold),
+                                    child: new Text(
+                                      _musicUploadedInProgress == true && _musicIsUploaded == false
+                                      ? 'This may take a few minutes'
+                                      : 'Select a track from desktop',
+                                    style: new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: _musicUploadedInProgress == true && _musicIsUploaded == false ? FontWeight.normal : FontWeight.bold),
                                     ),
                                   ),
                                 ),
                                 new Padding(
                                   padding: EdgeInsets.only(top: 20.0),
                                   child: 
-                                  _musicIsUploaded == false
+                                  _musicIsUploaded == false && _musicUploadedInProgress == false
                                   ? new InkWell(
                                     onTap: () async {
                                     if(kIsWeb) {
@@ -308,6 +312,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                           reader.onLoadEnd.listen((loadEndEvent) async {
                                             print('Reader job done');
                                             dialogSetState(() {
+                                              _musicUploadedInProgress = true;
                                               _musicUploaded = musicFile;
                                             });
                                             final _storage = firebase_storage.FirebaseStorage.instance;
@@ -318,7 +323,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                             await _feedbackAudioPlayer.setUrl(fileURL).whenComplete(() async {
                                                 _feedbackAudioPlayer.durationStream.listen((event) {
                                                   dialogSetState((){
+                                                 _musicUploadedInProgress  = false;
                                                  durationFileUploaded = _feedbackAudioPlayer.duration;
+                                                 _dragValueEndFeedback = _feedbackAudioPlayer.duration.inMilliseconds.toDouble();
                                                  //_feedbackAudioPlayer.play();
                                                  _musicIsUploaded = true;
                                                  print('"durationFileUploaded = ${durationFileUploaded.inMilliseconds.toString()}');
@@ -379,7 +386,11 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                       borderRadius: new BorderRadius.circular(10.0),
                                       ),
                                       child: new Center(
-                                        child: new Row(
+                                        child: _musicUploadedInProgress == true && _musicIsUploaded == false
+                                        ? new CircularProgressIndicator(
+                                          valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                                        )
+                                        : new Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             new Text('Successfully uploaded', 
@@ -472,7 +483,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                 child: new RangeSlider(
                                                   labels: new RangeLabels(Duration(milliseconds: _dragValueStartFeedback.toInt().round()).toString().split('.')[0],Duration(milliseconds: _dragValueEndFeedback.toInt().round()).toString().split('.')[0]),
                                                   min: 0.0,
-                                                  max: 222693,
+                                                  max: durationFileUploaded != null ? durationFileUploaded.inMilliseconds.toDouble() : 120000,
                                                   values: new RangeValues(_dragValueStartFeedback, _dragValueEndFeedback),
                                                   onChangeStart: (value) {
                                                     if(_feedbackAudioPlayer.playerState.playing == true) {
@@ -652,7 +663,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                         _lackOfSubjectOrBody == true
                         ? new Padding(
                           padding: EdgeInsets.only(top: 10.0),
-                          child: new Text('Subject & body are necessary.',
+                          child: new Text('All fields are required.',
                           style: new TextStyle(color: Colors.red, fontSize: 12.0, fontWeight: FontWeight.normal),
                           ),
                           )
@@ -689,12 +700,12 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             'Feedback section', 
                             dialogSetState, 
                             publishingInProgress, 
-                            context, 
+                            contextDialog, 
                             _subjectEditingController,
                             _bodyEditingController, 
                             categoryPosted);
                            });
-                          } else if(_subjectEditingController.text.length > 3 && _bodyEditingController.text.length > 3 && categoryPosted != null) {
+                          } else if((categoryPosted == 0 || categoryPosted == 1 || categoryPosted == 2) &&_subjectEditingController.text.length > 3 && _bodyEditingController.text.length > 3 && categoryPosted != null) {
                           publicationRequest(
                             widget.currentUser, 
                             widget.currentUserUsername, 
@@ -705,7 +716,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             _subjectEditingController.value.text, 
                             dialogSetState, 
                             publishingInProgress, 
-                            context, 
+                            contextDialog, 
                             _subjectEditingController,
                             _bodyEditingController, 
                             categoryPosted);
@@ -744,6 +755,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                   });
               } 
             ).whenComplete(() {
+              if(_feedbackAudioPlayer.playerState.playing == true) {
+                _feedbackAudioPlayer.stop();
+              }
               setState(() {
                 publishingInProgress = false;
                 _lackOfSubjectOrBody = false;
@@ -1026,7 +1040,18 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             listIsExpanded.add(false);
                             listTextEditingController.add(TextEditingController());
                             listFocusNodeController.add(FocusNode());
+                            //
+                            //
+                           //List<double> postContainerTrackDragStart = List<double>.filled(snapshot.data.docs.length, subPostContainerTrackDragStart, growable: true);
+                           // List<Duration> postContainerCurrentPositionTrack = List<Duration>.filled(snapshot.data.docs.length, subPostContainerCurrentPositionTrack, growable: true);
+                           // List<Duration> postContainerDurationTrack = List<Duration>.filled(snapshot.data.docs.length, subPostContainerDurationTrack, growable: true);
+                           // List<AudioPlayer> postContainerAudioPlayer = List<AudioPlayer>.filled(snapshot.data.docs.length, subPostContainerAudioPlayer, growable: true);
                             List<List<int>> listfeedbackCategories = List<List<int>>.filled(snapshot.data.docs.length, subListFeedbackCategorie, growable: true);
+                            postContainerAudioPlayer = new AudioPlayer();
+                            Duration postContainerDurationTrack;
+                            postContainerCurrentPositionTrack = new Duration(milliseconds: 10);
+                            postContainerTrackDragStart = 0.0;
+                            //
                             return new Padding(
                               padding: EdgeInsets.only(top: 20.0, right: 50.0, left: 50.0),
                               child: new Column(
