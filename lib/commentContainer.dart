@@ -67,7 +67,10 @@ class CommentContainerState extends State<CommentContainer> {
     ));
 
 
+  ScrollController _listFeedbackCategoriesScrollController = new ScrollController();
+
   bool _uploadInProgress = false;
+
 
   Stream<dynamic> _fetchAllComments;
   ScrollController _listCommentsScrollController = new ScrollController();
@@ -81,6 +84,8 @@ class CommentContainerState extends State<CommentContainer> {
       .orderBy('timestamp', descending: true)
       .snapshots();
   }
+
+
 
 
 
@@ -181,72 +186,80 @@ class CommentContainerState extends State<CommentContainer> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     widget.typeOfPost == 'feedback'
-                    ? new Padding(
-                      padding: EdgeInsets.only(top: 20.0, left: 20.0),
-                      child: new Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          new Container(
-                            height: 30.0,
-                            width: 100.0,
-                            decoration: new BoxDecoration(
-                              borderRadius: new BorderRadius.circular(30.0),
-                              color: ds['feedbackCategorie'] == 0
+                    ? new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                    new Padding(
+                      padding: EdgeInsets.only(top: 20.0, left: 10.0, right: 20.0),
+                      child: new Container(
+                        height: 40.0,
+                      child: new ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        controller: _listFeedbackCategoriesScrollController,
+                        physics: new NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: ds['feedbackCategorie'].length,
+                        itemBuilder: (BuildContext context, int indexFeedbackCategorie) {
+                          return new Padding(
+                            padding: EdgeInsets.only(left: 10.0),
+                          child: new Chip(
+                            label: new Text(
+                                  ds['feedbackCategorie'][indexFeedbackCategorie] == 0
+                                  ? 'Melodies'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 1
+                                  ? 'Vocals'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 2
+                                  ? 'Sound Design'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 3
+                                  ? 'Composition'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 4
+                                  ? 'Drums'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 5
+                                  ? 'Bass'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 6
+                                  ? 'Automation'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 7
+                                  ? 'Mixing'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 8
+                                  ? 'Mastering'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 9
+                                  ? 'Music theory'
+                                  : ds['feedbackCategorie'][indexFeedbackCategorie] == 10
+                                  ? 'Filling up'
+                                  : 'Melodies',
+                                style: new TextStyle(color:  Colors.black, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                ),
+                                backgroundColor:
+                                ds['feedbackCategorie'][indexFeedbackCategorie] == 0
                               ? Colors.lightBlue[400]
-                              : ds['feedbackCategorie'] == 1
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 1
                               ? Colors.blueGrey[400]
-                              : ds['feedbackCategorie'] == 2
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 2
                               ? Colors.purple[400]
-                              : ds['feedbackCategorie'] == 3
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 3
                               ? Colors.cyanAccent
-                              : ds['feedbackCategorie'] == 4
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 4
                               ? Colors.indigoAccent[400]
-                              : ds['feedbackCategorie'] == 5
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 5
                               ? Color(0xff68FA1E)
-                              : ds['feedbackCategorie'] == 6
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 6
                               ? Colors.indigo
-                              : ds['feedbackCategorie'] == 7
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 7
                               ? Colors.pink[400]
-                              : ds['feedbackCategorie'] == 8
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 8
                               ? Colors.yellow[400]
-                              : ds['feedbackCategorie'] == 9
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 9
                               ? Colors.purpleAccent[400]
-                              : ds['feedbackCategorie'] == 10
+                              :  ds['feedbackCategorie'][indexFeedbackCategorie] == 10
                               ? Colors.deepPurple[400]
-                              : Colors.transparent,
-                            ),
-                            child: new Center(
-                              child: new Text(
-                              ds['feedbackCategorie'] == 0
-                              ? 'Melodies'
-                              : ds['feedbackCategorie'] == 1
-                              ? 'Vocals'
-                              : ds['feedbackCategorie'] == 2
-                              ? 'Sound Design'
-                              : ds['feedbackCategorie'] == 3
-                              ? 'Composition'
-                              : ds['feedbackCategorie'] == 4
-                              ? 'Drums'
-                              : ds['feedbackCategorie'] == 5
-                              ? 'Bass'
-                              : ds['feedbackCategorie'] == 6
-                              ? 'Automation'
-                              : ds['feedbackCategorie'] == 7
-                              ? 'Mixing'
-                              : ds['feedbackCategorie'] == 8
-                              ? 'Mastering'
-                              : ds['feedbackCategorie'] == 9
-                              ? 'Music theory'
-                              : ds['feedbackCategorie'] == 10
-                              ? 'Filling up'
-                              : 'Melodies',
-                              style: new TextStyle(fontWeight: FontWeight.bold),
+                              : Colors.black,
                               ),
-                            ),
-                          ),
-                        ],
+                            );
+                        }),
                       ),
-                      )
+                      ),
+                      ],
+                    )
                     : new Container(),
                     widget.typeOfPost == 'feedback'
                     ? new Container(
@@ -267,7 +280,7 @@ class CommentContainerState extends State<CommentContainer> {
                             ds['aboutSpecificPartTrack'] == true
                             ? CupertinoIcons.check_mark_circled
                             : CupertinoIcons.nosign,
-                            color: ds['aboutSpecificPartTrack'] == true ? Colors.green : Colors.grey[600],
+                            color: ds['aboutSpecificPartTrack'] == true ? Color(0xffBF88FF) : Colors.grey[600],
                             size: 20.0,
                           )
                           ),
@@ -789,7 +802,7 @@ class CommentContainerState extends State<CommentContainer> {
                             widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
                             int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
                             FirebaseFirestore.instance
-                              .collection('posts')
+                              .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
                               .doc(widget.postID)
                               .collection('comments')
                               .doc(ds['timestamp'].toString()+ds['commentatorUsername'])
@@ -812,7 +825,7 @@ class CommentContainerState extends State<CommentContainer> {
                                  _uploadInProgress = false;
                                  });
                                 FirebaseFirestore.instance
-                                  .collection('posts')
+                                  .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
                                   .doc(widget.postID)
                                   .update({
                                     'comments': FieldValue.increment(1),
@@ -917,6 +930,7 @@ class CommentContainerState extends State<CommentContainer> {
                         postID: widget.postID,
                         commentID: ds['timestamp'].toString()+ds['commentatorUsername'],
                         homeContext: widget.homeContext,
+                        typeOfPost: widget.typeOfPost,
                       ),
                     ),
                   ],

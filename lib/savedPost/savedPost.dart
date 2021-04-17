@@ -4,6 +4,7 @@ import 'package:flanger_web_version/postContainer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 
 class SavedPostPage extends StatefulWidget {
@@ -57,11 +58,19 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
   //PostEditing controller
   TextEditingController _subjectEditingController = new TextEditingController();
   FocusNode _subjectEditingFocusNode = new FocusNode();
+  List<int> subListFeedbackCategorie = [];
   TextEditingController _bodyEditingController = new TextEditingController();
   FocusNode _bodyEditingFocusNode = new FocusNode();
   int categoryPosted = 0;
 
   bool _searchingInProgress = false;
+
+  // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
+  AudioPlayer postContainerAudioPlayer = new AudioPlayer();
+  Duration postContainerDurationTrack;
+  Duration postContainerCurrentPositionTrack;
+  double postContainerTrackDragStart = 0.0;
+  ///////////////////////////////////////
   
 
   Stream<dynamic> fetchAllSavedPosts() {
@@ -70,7 +79,8 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
     });
      initializationTimer();
     return FirebaseFirestore.instance
-      .collection('posts')
+      //.collection('posts')
+      .collection('test')
       .where('savedBy', arrayContains: widget.currentUser)
       //.orderBy('timestamp', descending: true)
       .snapshots();
@@ -306,6 +316,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                             listIsExpanded.add(false);
                             listTextEditingController.add(TextEditingController());
                             listFocusNodeController.add(FocusNode());
+                            List<List<int>> listfeedbackCategories = List<List<int>>.filled(snapshot.data.docs.length, subListFeedbackCategorie, growable: true);
                             return new Padding(
                               padding: EdgeInsets.only(top: 20.0, right: 50.0, left: 50.0),
                               child: new Column(
@@ -329,12 +340,18 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     index: index,
                                     listTextEditingController: listTextEditingController,
                                     listFocusNodeController: listFocusNodeController,
+                                    listfeedbackCategories: listfeedbackCategories,
                                     postID: ds['postID'],
                                     typeOfPost: ds['typeOfPost'],
                                     timestamp: ds['timestamp'],
                                     adminUID: ds['adminUID'],
                                     subject: ds['subject'],
                                     body: ds['body'],
+                                    trackURL: ds['typeOfPost'] == 'feedback' ? ds['trackURL'] : 'null',
+                                    trackDuration: ds['typeOfPost'] == 'feedback' ? ds['trackDuration'] : 0.0,
+                                    postContainerTrackDivisions: ds['typeOfPost'] == 'feedback' ? ds['divisions'] : 0,
+                                    postContainerTrackStartParticular: ds['typeOfPost'] == 'feedback' ? ds['startParticularPart'] : 0.0,
+                                    postContainerTrackEndParticular: ds['typeOfPost'] == 'feedback' ? ds['endParticularPart'] : 0.0,
                                     likes: ds['likes'],
                                     likedBy: arrayOfLikes,
                                     fires: ds['fires'],
@@ -345,6 +362,10 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     commentedBy: ds['commentedBy'],
                                     reactedBy: ds['reactedBy'],
                                     savedBy: arrayOfSavedBy,
+                                    postContainerAudioPlayer: postContainerAudioPlayer,
+                                    postContainerDurationTrack: postContainerDurationTrack,
+                                    postContainerCurrentPositionTrack: postContainerCurrentPositionTrack,
+                                    postContainerTrackDragStart: postContainerTrackDragStart,
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
                                     adminNotificationsToken: ds['adminNotificationsToken'],

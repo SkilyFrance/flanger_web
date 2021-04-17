@@ -75,9 +75,9 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
   String postIDSelected;
   Stream<dynamic> _fetchPostsDatas;
 
-  Stream<dynamic> fetchPostsDatas(String dsUID) {
+  Stream<dynamic> fetchPostsDatas(String dsUID, String collection) {
     return FirebaseFirestore.instance
-      .collection('posts')
+      .collection(collection)
       .doc(dsUID)
       .snapshots();
   }
@@ -290,7 +290,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                               setState(() {
                                                 _postIDSelected = ds['postID'];
                                                 listTileSelected = index;
-                                                _fetchPostsDatas = fetchPostsDatas(ds['postID']);
+                                                _fetchPostsDatas = fetchPostsDatas(ds['postID'], ds['title'] == 'Feedback section' ? 'test' : 'posts');
                                                 print('_postIDSelected = $_postIDSelected');
                                                 if(ds['alreadySeen'] == false) {
                                                   FirebaseFirestore.instance

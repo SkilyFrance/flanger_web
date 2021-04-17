@@ -20,6 +20,7 @@ class ReplyContainer extends StatefulWidget {
   String currentNotificationsToken;
   String postID;
   String commentID;
+  String typeOfPost;
   BuildContext homeContext;
 
 
@@ -40,6 +41,7 @@ class ReplyContainer extends StatefulWidget {
     this.postID,
     this.commentID,
     this.homeContext,
+    this.typeOfPost,
     }) : super(key: key);
 
 
@@ -71,7 +73,7 @@ ScrollController _listRepliesScrollController = new ScrollController();
 
   Stream<dynamic> fechAllReplies() {
     return FirebaseFirestore.instance
-      .collection('posts')
+      .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
       .doc(widget.postID)
       .collection('comments')
       .doc(widget.commentID)

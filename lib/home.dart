@@ -58,19 +58,31 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  Stream<dynamic> _fetchAllPostsRecent;
+
+  //BodyController Page view
+  PageController _pageViewBodyController;
+
+
   Stream<dynamic> _fetchIssuesPosts;
   Stream<dynamic> _fetchTipsPosts;
   Stream<dynamic> _fetchProjectPosts;
+  Stream<dynamic> _fetchTestFeedback;
 
+  //Variables to change screen
+  //
+  bool issuesIsCurrentScreen = false;
+  bool tipsIsCurrentScreen = false;
+  bool projectIsCurrentScreen = false;
+  bool feedbackIsCurrentScreen = false;
 
   int tabChoosen = 0;
   ScrollController _listPostScrollController = new ScrollController();
   List<bool> listIsExpanded = [];
   List<TextEditingController> listTextEditingController = [];
   List<FocusNode> listFocusNodeController = [];
-  List<int> subListFeedbackCategorie = [];
   ScrollController _feedScrollController = new ScrollController();
+
+
 
 
 
@@ -92,30 +104,32 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   Duration currentPositionFeedbackPlayer;//= = Duration(milliseconds: 10);
   Duration currentBufferingFeedbackPlayer;//= = Duration(milliseconds: 10);
   double _dragValueStartFeedback = 0;
-  double _dragValueEndFeedback = 222693;
+  double _dragValueEndFeedback = 10; //222693;
   int _trackSplitFeedback = 6;
   ///////////////////////////////////////
   
   // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
   AudioPlayer postContainerAudioPlayer = new AudioPlayer();
+  List<int> subListFeedbackCategorie = [];
   Duration postContainerDurationTrack;
   Duration postContainerCurrentPositionTrack;
   double postContainerTrackDragStart = 0.0;
   ///////////////////////////////////////
 
-
-
-
-
-
-  //SearchFilters
-  bool _searchByIssues = false;
-  bool _searchBytips = false;
-  bool _searchByProjects = false;
   
+  
+  /*Stream<dynamic> fetchAllPostsRecent() {
+    setState(() {
+      _searchingInProgress = true;
+    });
+     initializationTimer();
+    return FirebaseFirestore.instance
+      .collection('posts')
+      .orderBy('timestamp', descending: true)
+      .snapshots();
+    }*/
 
 
-  Stream<dynamic> _fetchTestForFeedback;
   Stream<dynamic> fetchTestForFeedback() {
     setState(() {
       _searchingInProgress = true;
@@ -127,17 +141,6 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
       .snapshots();
     }
   
-
-  Stream<dynamic> fetchAllPostsRecent() {
-    setState(() {
-      _searchingInProgress = true;
-    });
-     initializationTimer();
-    return FirebaseFirestore.instance
-      .collection('posts')
-      .orderBy('timestamp', descending: true)
-      .snapshots();
-    }
 
   Stream<dynamic> fetchIssuesPosts() {
     return FirebaseFirestore.instance
@@ -171,10 +174,11 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
 @override
   void initState() {
-    _fetchTestForFeedback = fetchTestForFeedback();
-    _fetchAllPostsRecent = fetchAllPostsRecent();
-    _fetchIssuesPosts = fetchIssuesPosts();
+    tipsIsCurrentScreen = true;
+    _pageViewBodyController = new PageController(initialPage: 0, viewportFraction: 1);
     _fetchTipsPosts = fetchTipsPosts();
+    _fetchTestFeedback = fetchTestForFeedback();
+    _fetchIssuesPosts = fetchIssuesPosts();
     _fetchProjectPosts = fetchProjectPosts();
     print('soundCloud = ' + widget.currentSoundCloud);
     print('Spotify = ' + widget.currentSpotify);
@@ -206,11 +210,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
               builder: (context) {
                 return new StatefulBuilder(
                   builder: (contextDialog, dialogSetState) {
-                    return 
-                    //Container(
-                    //  child: new SingleChildScrollView(
-                   //  child: 
-                     new AlertDialog(
+                    return new AlertDialog(
                     backgroundColor: Color(0xff121212),
                       title: new Column(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -660,7 +660,6 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                ],
                              )
                            ),
-                           
                         ],
                       ),
                       content: new Padding(
@@ -687,7 +686,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             widget.currentNotificationsToken, 
                             widget.currentSoundCloud,
                             _bodyEditingController.value.text, 
-                            'Feedback', 
+                            'Feedback section', 
                             dialogSetState, 
                             publishingInProgress, 
                             context, 
@@ -759,7 +758,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
       body: new Container(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        child: new Stack(
+       child: new Stack(
           children: [
             new Positioned(
               top: 0.0,
@@ -779,7 +778,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              new Padding(
+             new Padding(
                 padding: EdgeInsets.only(top: 50.0),
                 child: new Center(
                   child: new Text('Home',
@@ -807,7 +806,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                 child: new Center(
                   child: new Container(
                     height: 40.0,
-                    width: 400.0,
+                    width: 450.0,
                     color: Colors.transparent,
                     child: new Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -815,7 +814,10 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                         new InkWell(
                           onTap: () {
                             setState(() {
-                              _searchByIssues =! _searchByIssues;
+                              issuesIsCurrentScreen = false;
+                              tipsIsCurrentScreen = true;
+                              projectIsCurrentScreen = false;
+                              feedbackIsCurrentScreen = false;
                             });
                           },
                         child: new Container(
@@ -824,23 +826,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                           decoration: new BoxDecoration(
                             border: new Border.all(
                              width: 2.0,
-                             color: Color(0xff7360FC),
-                            ),
-                            color: _searchByIssues == true ? Color(0xff7360FC) : Colors.black.withOpacity(0.5),
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                          child: new Text('Issues',
-                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
-                          )),
-                        )),
-                        new Container(
-                          height: 40.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            border: new Border.all(
-                             width: 2.0,
-                             color: Color(0xff62DDF9),
+                             color: tipsIsCurrentScreen == true ?  Color(0xff62DDF9) : Colors.grey[900],
                             ),
                             color: Colors.black.withOpacity(0.5),
                             borderRadius: new BorderRadius.circular(40.0),
@@ -849,14 +835,70 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                           child: new Text('Tips',
                               style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
                           )),
-                        ),
-                        new Container(
+                        )),
+                        new InkWell(
+                          onTap: () {
+                            setState(() { 
+                              issuesIsCurrentScreen = false;
+                              tipsIsCurrentScreen = false;
+                              projectIsCurrentScreen = false;
+                              feedbackIsCurrentScreen = true;
+                            });
+                          },
+                        child: new Container(
                           height: 40.0,
                           width: 100.0,
                           decoration: new BoxDecoration(
                             border: new Border.all(
                              width: 2.0,
-                             color: Color(0xffBF88FF),
+                             color: feedbackIsCurrentScreen == true ? Colors.purpleAccent : Colors.grey[900],
+                            ),
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: new BorderRadius.circular(40.0),
+                          ),
+                          child: new Center(
+                          child: new Text('Feedbacks',
+                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
+                          )),
+                        )),
+                        new InkWell(
+                          onTap: () {
+                            setState(() {
+                              issuesIsCurrentScreen = true;
+                              tipsIsCurrentScreen = false;
+                              projectIsCurrentScreen = false;
+                              feedbackIsCurrentScreen = false;
+                            });
+                          },
+                        child: new Container(
+                          height: 40.0,
+                          width: 100.0,
+                          decoration: new BoxDecoration(
+                            border: new Border.all(
+                             width: 2.0,
+                             color: Colors.grey[900], //currentScreen == issuesScreen ? Color(0xff7360FC) : Colors.grey[900],
+                            ),
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: new BorderRadius.circular(40.0),
+                          ),
+                          child: new Center(
+                          child: new Text('Issues',
+                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
+                          )),
+                        )),
+                        new InkWell(
+                          onTap: () {
+                            setState(() {
+                      
+                            });
+                          },
+                        child: new Container(
+                          height: 40.0,
+                          width: 100.0,
+                          decoration: new BoxDecoration(
+                            border: new Border.all(
+                             width: 2.0,
+                             color:  Colors.grey[900], // currentScreen == projectScreen ? Color(0xffBF88FF) : Colors.grey[900],
                             ),
                             color: Colors.black.withOpacity(0.5),
                             borderRadius: new BorderRadius.circular(40.0),
@@ -866,11 +908,13 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                               style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
                           )),
                         ),
+                        ),
                       ],
                     )
                   ),
                 ),
               ),
+
                                   /*new Padding(
                                     padding: EdgeInsets.only(top: 40.0, bottom: 0.0),
                                     child: new Container(
@@ -909,7 +953,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                         }),
                                     ),
                                   ),*/
-                new Padding(
+              //TipsContainer
+               new Container(
+               child: new Padding(
                 padding: EdgeInsets.only(top: 50.0),
                 child: new Container(
                   constraints: new BoxConstraints(
@@ -917,8 +963,8 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                     maxWidth: 850.0,
                   ),
                 child: new StreamBuilder(
-                  stream: _fetchTestForFeedback, //_fetchAllPostsRecent,
-                  builder: (BuildContext contex, AsyncSnapshot<dynamic> snapshot) {
+                      stream: _fetchTestFeedback,
+                      builder: (BuildContext contex, AsyncSnapshot<dynamic> snapshot) {
                       if(snapshot.connectionState == ConnectionState.waiting) {
                       return  new Container(
                         height: MediaQuery.of(context).size.height*0.40,
@@ -927,7 +973,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                       );
                       }
                       if(snapshot.hasError) {
-                      return  new Container(
+                      return new Container(
                         height: MediaQuery.of(context).size.height*0.40,
                         color: Colors.transparent,
                         child: new Center(
@@ -1043,6 +1089,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                       }),
                       ),
                      ),
+                    ),
                   ],
                 ),
               ),

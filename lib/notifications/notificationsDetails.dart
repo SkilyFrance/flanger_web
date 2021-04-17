@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flanger_web_version/commentContainer.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../requestList.dart';
@@ -60,14 +61,6 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
   FocusNode _postCommentFocusNode = new FocusNode();
   bool _uploadInProgress = false;
 
-  /*Stream<dynamic> _fetchPostsDatas;
-  Stream<dynamic> fetchPostsDatas() {
-    return FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.postID)
-      .snapshots();
-  }*/
-
   final postSaved = new SnackBar(
     backgroundColor: Colors.deepPurpleAccent,
     content: new Text('This post has been saved 🌩️',
@@ -83,11 +76,34 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
     ));
 
 
+  // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
+  AudioPlayer postContainerAudioPlayer = new AudioPlayer();
+  List<int> subListFeedbackCategorie = [];
+  Duration postContainerDurationTrack;
+  Duration postContainerCurrentPositionTrack;
+  double postContainerTrackDragStart = 0.0;
+  //double postContainerTrackStartParticular;
+  //double postContainerTrackEndParticular;
+  String _trackURLPlaying = '';
+  List<int> listfeedbackCategories = [];
+  ScrollController _categoriesfeedbackListViewController = new ScrollController();
+  ScrollController _listFeedbackCategorieAdded = new ScrollController();
+  bool aboutSpecificPartTrack = true;
+  ///////////////////////////////////////
+
+
   @override
   void initState() {
-   // _fetchPostsDatas = fetchPostsDatas();
     super.initState();
   }
+
+  @override
+  void dispose() {
+    postContainerAudioPlayer.dispose();
+    super.dispose();
+  }
+
+  
 
 
 
@@ -130,6 +146,8 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                 ? Color(0xff62DDF9)
                                 : widget.snapshot.data['typeOfPost'] == 'project'
                                 ? Color(0xffBF88FF)
+                                : widget.snapshot.data['typeOfPost'] == 'project'
+                                ? Colors.lightBlue
                                 : Color(0xff62DDF9),
                                 borderRadius: new BorderRadius.only(
                                   topLeft: Radius.circular(10.0),
@@ -525,6 +543,204 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                             ),
                           )
                           ),
+
+                      // IF FEEDBACK CONTAINER
+                     widget.snapshot.data['typeOfPost'] == 'feedback'
+                      ? new Padding(
+                        padding: EdgeInsets.only(top: 20.0,left: 0.0, right: 0.0, bottom: 40.0),
+                        child: new Container(
+                          height: 100.0,
+                                        child: new Column(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                          new Padding(
+                                            padding: EdgeInsets.only(top: 0.0),
+                                            child: new Center(
+                                              child: new Text('A specific part was put forward by ' + widget.snapshot.data['adminUsername'],
+                                              style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.normal),
+                                              ),
+                                            ),
+                                          ),
+                                          new Padding(
+                                            padding: EdgeInsets.only(top: 10.0, left: 30.0, right: 30.0),
+                                            child: new Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                new Padding(
+                                                  padding: EdgeInsets.only(bottom: 10.0),
+                                                child: new IconButton(
+                                                  splashColor: Colors.transparent,
+                                                  highlightColor: Colors.transparent,
+                                                  focusColor: Colors.transparent,
+                                                  icon: new Icon(
+                                                  postContainerAudioPlayer.playerState.processingState == ProcessingState.loading
+                                                ? new CircularProgressIndicator(
+                                                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                                                )
+                                                : postContainerAudioPlayer.playerState.playing == true 
+                                                ? CupertinoIcons.pause_circle_fill
+                                                : CupertinoIcons.play_circle_fill,
+                                                  size: 40.0,
+                                                  color: Colors.white,
+                                                  ), 
+                                                  onPressed: () async {
+                                                    if(_trackURLPlaying != widget.snapshot.data['trackURL']) {
+                                                      setState(() {
+                                                        _trackURLPlaying = widget.snapshot.data['trackURL'];
+                                                      });
+                                                    ////////////////////
+                                                    await postContainerAudioPlayer.setUrl(widget.snapshot.data['trackURL']).whenComplete(() async {
+                                                      postContainerAudioPlayer.durationStream.listen((event) {
+                                                        setState(() {
+                                                          postContainerDurationTrack = postContainerAudioPlayer.duration;
+                                                        });
+                                                        postContainerAudioPlayer.positionStream.listen((event) {
+                                                          setState(() {
+                                                            postContainerCurrentPositionTrack = event;
+                                                          });
+                                                          //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                                          print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
+                                                          if(postContainerCurrentPositionTrack >= Duration(milliseconds: postContainerDurationTrack.inMilliseconds.toInt())) {
+                                                            print('AudioPlayer: Extract finished');
+                                                            postContainerAudioPlayer.pause();
+                                                            }
+                                                        });
+                                                          postContainerAudioPlayer.play();
+                                                      });
+                                                    });
+                                                    } else if(_trackURLPlaying == widget.snapshot.data['trackURL']
+                                                      && postContainerAudioPlayer.playerState.playing == false
+                                                      && ((postContainerTrackDragStart > postContainerCurrentPositionTrack.inMilliseconds) || (postContainerTrackDragStart < postContainerCurrentPositionTrack.inMilliseconds))) {
+                                                      postContainerAudioPlayer.seek(Duration(milliseconds: postContainerTrackDragStart.toInt())).whenComplete(() {
+                                                        print('AudioPlayer : play after seek');
+                                                        postContainerAudioPlayer.play();
+                                                      });
+                                                  
+                                                    } else if(_trackURLPlaying == widget.snapshot.data['trackURL']
+                                                    && postContainerAudioPlayer.playerState.playing == true) {
+                                                      print('AudioPlayer : Pause');
+                                                      postContainerAudioPlayer.pause();
+                                                    }
+                                                    /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
+                                                      widget.postContainerAudioPlayer.pause();
+                                                    } else {
+                                                      widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
+                                                        print('AudioPlayer: Start is seeked');
+                                                      widget.postContainerAudioPlayer.play();
+                                                      });
+                                                    }*/
+                                                  },
+                                                ),
+                                                ),
+                                                new Padding(
+                                                  padding: EdgeInsets.only(left: 20.0),
+                                                  child: new Container(
+                                                    height: 50.0,
+                                                    width: 450.0,
+                                                    decoration: new BoxDecoration(
+                                                      color: Colors.transparent,
+                                                      borderRadius: new BorderRadius.circular(40.0)
+                                                    ),
+                                                    child: new Stack(
+                                                      children: [
+                                                          new SliderTheme(
+                                                            data: Theme.of(context).sliderTheme.copyWith(
+                                                              trackHeight: 20.0,
+                                                              disabledThumbColor: Colors.transparent,
+                                                              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                                              thumbColor: Colors.grey[900],
+                                                              //disabledThumbColor: Colors.transparent,
+                                                              //trackShape: RoundedRectSliderTrackShape(),
+                                                              //inactiveTrackColor: Colors.grey[900],
+                                                              inactiveTrackColor: Colors.grey[900],
+                                                              activeTrackColor: Color(0xffBF88FF),
+                                                            // disabledInactiveTickMarkColor: Colors.transparent,
+                                                              //activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                                              //inactiveTickMarkColor: Colors.grey[600],
+                                                            // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                                            ),
+                                                          child: ExcludeSemantics(
+                                                          child: new RangeSlider(
+                                                            labels: RangeLabels('',''),
+                                                            min: 0.0,
+                                                            max: 222693,
+                                                            values: new RangeValues(widget.snapshot.data['startParticularPart'].toDouble(), widget.snapshot.data['endParticularPart'].toDouble()),
+                                                            onChangeStart: (value) {},
+                                                            onChanged: (value) {},
+                                                            divisions: postContainerAudioPlayer.playerState.playing == true ? null : widget.snapshot.data['divisions'],
+                                                            ),
+                                                          )),
+                                                          new SliderTheme(
+                                                            data: Theme.of(context).sliderTheme.copyWith(
+                                                              trackHeight: 20.0,
+                                                              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                                              thumbColor: Colors.deepPurpleAccent,
+                                                              //disabledThumbColor: Colors.transparent,
+                                                              //trackShape: RoundedRectSliderTrackShape(),
+                                                              inactiveTrackColor: Colors.transparent,
+                                                              activeTrackColor: Colors.deepPurple.withOpacity(0.2),
+                                                            // disabledInactiveTickMarkColor: Colors.transparent,
+                                                              activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                                              inactiveTickMarkColor: Colors.grey[600],
+                                                            // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                                            ),
+                                                          child: new Slider(
+                                                            label: new Duration(milliseconds: (postContainerTrackDragStart).toInt()).toString().split('.')[0],
+                                                            min: 0.0,
+                                                            max: 222693,
+                                                            value: postContainerAudioPlayer.playerState.playing == true ? postContainerCurrentPositionTrack.inMilliseconds.toDouble() : postContainerTrackDragStart,
+                                                            onChangeStart: (value) {
+                                                              if(postContainerAudioPlayer.playerState.playing == true) {
+                                                                postContainerAudioPlayer.pause();
+                                                              }
+                                                            },
+                                                            onChanged: (value) {
+                                                              setState((){
+                                                                postContainerTrackDragStart = value;
+                                                              });
+                                                            },
+                                                            divisions: postContainerAudioPlayer.playerState.playing == true ? null : widget.snapshot.data['divisions'],
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  ),
+                              
+                                              ],
+                                            ),
+                                            ),
+                                            new Padding(
+                                              padding: EdgeInsets.only(top: 10.0),
+                                              child: new Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  new Text('Duration :',
+                                                  style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.bold),
+                                                  ),
+                                                  new Padding(
+                                                    padding: EdgeInsets.only(left: 5.0),
+                                                    child: new Text(
+                                                    postContainerDurationTrack != null && postContainerCurrentPositionTrack != null
+                                                    ? 
+                                                    (postContainerAudioPlayer.playerState.playing == true
+                                                    ? Duration(milliseconds: (postContainerDurationTrack.inMilliseconds-postContainerCurrentPositionTrack.inMilliseconds).toInt()).toString().split('.')[0]
+                                                    : Duration(milliseconds: (postContainerDurationTrack.inMilliseconds-postContainerTrackDragStart).toInt()).toString().split('.')[0]
+                                                    )
+                                                    : Duration(milliseconds: (widget.snapshot.data['trackDuration']).toInt()).toString().split('.')[0],
+                                                    style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.normal),
+                                                  
+                                                  //_dragValueEndFeedback.toInt().round()).toString().split('.')[0]
+                                                  ),
+                                                    ),
+                                                ],
+                                              )
+                                              ),
+                                            ],
+                                          ),
+                        ),
+                      )
+                      : new Container(),
                           new Padding(
                             padding: EdgeInsets.only(left: 30.0),
                             child: new Row(
@@ -701,6 +917,299 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                             ],
                             ),
                           ),
+            //Categories feedback container
+             widget.snapshot.data['typeOfPost'] == 'feedback'
+            ?  new Padding(
+              padding: EdgeInsets.only(top: 40.0, left: 20.0, right: 20.0),
+              child: new Container(
+                height: 130.0,
+                decoration: new BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: new BorderRadius.circular(10.0),
+                ),
+                child: new Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        new Padding(
+                          padding: EdgeInsets.only(left: 20.0),
+                          child: new RichText(
+                            text: new TextSpan(
+                              text: 'Choose feedback categories ',
+                              style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.w500),
+                              children: [
+                                new TextSpan(
+                                  text: ' (Maximum: 3)',
+                                  style: new TextStyle(color: Colors.grey, fontSize: 12.0, fontWeight: FontWeight.normal),
+                                ),
+                              ]
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    new Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        new Padding(
+                          padding: EdgeInsets.only(left: 20.0, top: 5.0),
+                          child: new Text('Your tag : ',
+                          style: new TextStyle(color: Colors.grey, fontSize: 13.0),
+                          )),
+                        new Padding(
+                          padding: EdgeInsets.only(left: 5.0, top: 5.0),
+                          child: listfeedbackCategories.isEmpty
+                          ? new Text('Select a tag below',
+                          style: new TextStyle(color: Colors.grey[600], fontSize: 13.0),
+                          )
+                          : new Container(
+                            height: 30.0,
+                          child: new ListView.builder(
+                            controller: _listFeedbackCategorieAdded,
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            physics: new ScrollPhysics(),
+                            itemCount: listfeedbackCategories.length,
+                            itemBuilder: (BuildContext context, int index){
+                            return new Padding(
+                              padding: EdgeInsets.only(left: 10.0),
+                              child: new Chip(
+                                onDeleted: () {
+                                switch(listfeedbackCategories[index]) {
+                                  case 0: 
+                                  setState(() {listfeedbackCategories.remove(0);});
+                                  break;
+                                  case 1: setState(() {listfeedbackCategories.remove(1);});
+                                  break;
+                                  case 2: setState(() {listfeedbackCategories.remove(2);});
+                                  break;
+                                  case 3: setState(() {listfeedbackCategories.remove(3);});
+                                  break;
+                                  case 4: setState(() {listfeedbackCategories.remove(4);});
+                                  break;
+                                  case 5: setState(() {listfeedbackCategories.remove(5);});
+                                  break;
+                                  case 6: setState(() {listfeedbackCategories.remove(6);});
+                                  break;
+                                  case 7: setState(() {listfeedbackCategories.remove(7);});
+                                  break;
+                                  case 8: setState(() {listfeedbackCategories.remove(8);});
+                                  break;
+                                  case 9: setState(() {listfeedbackCategories.remove(9);});
+                                  break;
+                                  case 10: setState(() {listfeedbackCategories.remove(10);});
+                                  break;
+                                  default: print('error switch categorie feedback');
+                                }
+                                },
+                                backgroundColor: 
+                                listfeedbackCategories[index] == 0
+                              ? Colors.lightBlue[400]
+                              :  listfeedbackCategories[index] == 1
+                              ? Colors.blueGrey[400]
+                              :  listfeedbackCategories[index] == 2
+                              ? Colors.purple[400]
+                              :  listfeedbackCategories[index] == 3
+                              ? Colors.cyanAccent
+                              : listfeedbackCategories[index] == 4
+                              ? Colors.indigoAccent[400]
+                              :  listfeedbackCategories[index] == 5
+                              ? Color(0xff68FA1E)
+                              :  listfeedbackCategories[index] == 6
+                              ? Colors.indigo
+                              :  listfeedbackCategories[index] == 7
+                              ? Colors.pink[400]
+                              :  listfeedbackCategories[index] == 8
+                              ? Colors.yellow[400]
+                              :  listfeedbackCategories[index] == 9
+                              ? Colors.purpleAccent[400]
+                              :  listfeedbackCategories[index] == 10
+                              ? Colors.deepPurple[400]
+                              : Colors.black,
+                                label: new Text(
+                                  listfeedbackCategories[index] == 0
+                                  ? 'Melodies'
+                                  : listfeedbackCategories[index] == 1
+                                  ? 'Vocals'
+                                  : listfeedbackCategories[index] == 2
+                                  ? 'Sound Design'
+                                  : listfeedbackCategories[index] == 3
+                                  ? 'Composition'
+                                  : listfeedbackCategories[index] == 4
+                                  ? 'Drums'
+                                  : listfeedbackCategories[index] == 5
+                                  ? 'Bass'
+                                  : listfeedbackCategories[index] == 6
+                                  ? 'Automation'
+                                  : listfeedbackCategories[index] == 7
+                                  ? 'Mixing'
+                                  : listfeedbackCategories[index] == 8
+                                  ? 'Mastering'
+                                  : listfeedbackCategories[index] == 9
+                                  ? 'Music theory'
+                                  : listfeedbackCategories[index] == 10
+                                  ? 'Filling up'
+                                  : 'Melodies',
+                                style: new TextStyle(color:  Colors.black, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                ),
+                            ),
+                            );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                     new Padding(
+                      padding: EdgeInsets.only(left: 0.0),
+                      child: new Container(
+                      height: 35.0,
+                      child: new ListView.builder(
+                        padding: EdgeInsets.only(left: 0.0, right: 10.0),
+                        controller: _categoriesfeedbackListViewController,
+                        physics: new ScrollPhysics(),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 11,
+                        itemBuilder: (BuildContext context, int index) {
+                          return new Padding(
+                            padding: EdgeInsets.only(left: 10.0),
+                            child: listfeedbackCategories.contains(index) == false
+                            ? new Chip(
+                                deleteButtonTooltipMessage: 'Add',
+                                deleteIcon: new Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 20.0),
+                                onDeleted: () {
+                                  if(listfeedbackCategories.length >= 3) {
+                                    print('Maximum reached');
+                                  } else {
+                                  switch(index) {
+                                    case 0: 
+                                    setState(() {listfeedbackCategories.add(0);});
+                                    break;
+                                    case 1: setState(() {listfeedbackCategories.add(1);});
+                                    break;
+                                    case 2: setState(() {listfeedbackCategories.add(2);});
+                                    break;
+                                    case 3: setState(() {listfeedbackCategories.add(3);});
+                                    break;
+                                    case 4: setState(() {listfeedbackCategories.add(4);});
+                                    break;
+                                    case 5: setState(() {listfeedbackCategories.add(5);});
+                                    break;
+                                    case 6: setState(() {listfeedbackCategories.add(6);});
+                                    break;
+                                    case 7: setState(() {listfeedbackCategories.add(7);});
+                                    break;
+                                    case 8: setState(() {listfeedbackCategories.add(8);});
+                                    break;
+                                    case 9: setState(() {listfeedbackCategories.add(9);});
+                                    break;
+                                    case 10: setState(() {listfeedbackCategories.add(10);});
+                                    break;
+                                    default: print('error switch categorie feedback');
+                                  }
+                                  }
+                                },
+                                side: BorderSide(
+                                  color: index == 0
+                                    ? Colors.lightBlue[400]
+                                    :  index == 1
+                                    ? Colors.blueGrey[400]
+                                    :  index == 2
+                                    ? Colors.purple[400]
+                                    :  index == 3
+                                    ? Colors.cyanAccent
+                                    : index == 4
+                                    ? Colors.indigoAccent[400]
+                                    :  index == 5
+                                    ? Color(0xff68FA1E)
+                                    :  index == 6
+                                    ? Colors.indigo
+                                    :  index == 7
+                                    ? Colors.pink[400]
+                                    :  index == 8
+                                    ? Colors.yellow[400]
+                                    :  index == 9
+                                    ? Colors.purpleAccent[400]
+                                    :  index == 10
+                                    ? Colors.deepPurple[400]
+                                    : Colors.black,
+                                ),
+                                backgroundColor: Colors.black,
+                                  label: new Text(
+                                    index == 0
+                                    ? 'Melodies'
+                                    : index == 1
+                                    ? 'Vocals'
+                                    : index == 2
+                                    ? 'Sound Design'
+                                    : index == 3
+                                    ? 'Composition'
+                                    : index == 4
+                                    ? 'Drums'
+                                    : index == 5
+                                    ? 'Bass'
+                                    : index == 6
+                                    ? 'Automation'
+                                    : index == 7
+                                    ? 'Mixing'
+                                    : index == 8
+                                    ? 'Mastering'
+                                    : index == 9
+                                    ? 'Music theory'
+                                    : index == 10
+                                    ? 'Filling up'
+                                    : 'Melodies',
+                                  style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                  ),
+                                )
+                              : new Container(),
+                          );
+                        },
+                      ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              )
+              : new Container(),
+            widget.snapshot.data['typeOfPost'] == 'feedback'
+            ? new Padding(
+              padding: EdgeInsets.only(top: 20.0, left: 20.0),
+            child: new Container(
+              height: 30.0,
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  new Switch(
+                    activeColor: Color(0xffBF88FF),
+                    activeTrackColor: Color(0xffBF88FF).withOpacity(0.5),
+                    inactiveTrackColor: Colors.grey[900],
+                    value: aboutSpecificPartTrack, 
+                    onChanged: (value) {
+                      setState(() {
+                        aboutSpecificPartTrack =! aboutSpecificPartTrack;
+                      });
+                    }),
+                  new Padding(
+                    padding: EdgeInsets.only(left: 15.0),
+                    child: new Text(
+                      aboutSpecificPartTrack == true
+                      ? 'This comment is about the specific part'
+                      : 'This comment is not about the specific part',
+                      style: new TextStyle(color: aboutSpecificPartTrack == true ? Colors.white : Colors.grey[600], fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                      wordSpacing: 1.0,
+                      letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ),
+            )
+            : new Container(),
                           //TextEditingController
                           new Padding(
                             padding: EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0, bottom: 10.0),
@@ -866,6 +1375,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                 currentMixcloud: widget.currentMixcloud,
                                 currentNotificationsToken: widget.currentNotificationsToken,
                                 postID: widget.snapshot.data['postID'],
+                                typeOfPost:widget.snapshot.data['typeOfPost'] ,
                                 reactedBy: widget.snapshot.data['reactedBy'],
                                 homeContext: context,
                               ),

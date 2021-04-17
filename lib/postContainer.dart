@@ -145,8 +145,8 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
 
   ScrollController _categoriesfeedbackListViewController = new ScrollController();
   ScrollController _listFeedbackCategorieAdded = new ScrollController();
-  int feedbackCategorieChoose;
   bool aboutSpecificPartTrack = true;
+  bool chipCategoriesAreShowing = false;
   
 
 
@@ -600,12 +600,13 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     ScaffoldMessenger.of(widget.homeContext).showSnackBar(postAlreadySaved);
                   } else {
                   FirebaseFirestore.instance
-                    .collection('posts')
+                    .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
                     .doc(widget.postID)
                     .update({
                       'savedBy': FieldValue.arrayUnion([widget.currentUser]),
                     }).whenComplete(() {
-                      ScaffoldMessenger.of(widget.homeContext).showSnackBar(postSaved);
+                      print('No work');
+                      //ScaffoldMessenger.of(widget.homeContext).showSnackBar(postSaved);
                     });
                   }
                   },
@@ -725,36 +726,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           ), value: '1'),]
                 ),
               )
-
-
-
-              /*new Container(
-                height: 30.0,
-                width: 80.0,
-              child: new Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  new Padding(
-                    padding: EdgeInsets.only(left: 0.0),
-                    child: 
-                    ds['typeOfPost'] == 'issue'
-                    ? new Icon(CupertinoIcons.burst, color: Colors.deepPurpleAccent, size: 20.0)
-                    : ds['typeOfPost'] == 'tip'
-                    ? new Icon(CupertinoIcons.lightbulb, color: Colors.purpleAccent, size: 20.0)
-                    : new Icon(CupertinoIcons.rocket, color: Colors.cyanAccent, size: 20.0)
-                    ),
-                  new Padding(
-                    padding: EdgeInsets.only(left: 5.0),
-                  child: new Text(
-                    ds['typeOfPost'] == 'issue' 
-                    ? 'Issue'
-                    : ds['typeOfPost'] == 'tip'
-                    ? 'Tip'
-                    : 'Project',
-                    style: new TextStyle(color: Colors.grey, fontSize: 14.0, fontWeight: FontWeight.normal))),
-                ],
-              ),
-              ),*/
+    
             ),
             // IF FEEDBACK CONTAINER
             widget.typeOfPost == 'feedback'
@@ -918,42 +890,6 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                           ),
                                         ),
                                         ),
-                                   /*new Padding(
-                                     padding: EdgeInsets.only(bottom: 10.0),
-                                     child: new Row(
-                                       mainAxisAlignment: MainAxisAlignment.center,
-                                       children: [
-                                         new IconButton(
-                                           focusColor: Colors.transparent,
-                                           splashColor: Colors.transparent,
-                                           highlightColor: Colors.transparent,
-                                           icon: Icon(CupertinoIcons.minus_circled, color: Colors.deepPurpleAccent.withOpacity(0.5), size: 30.0), 
-                                           onPressed: () {
-                                             if(divisionsTrack > 2) {
-                                               setState((){
-                                                 divisionsTrack--;
-                                               });
-                                             } else {
-                                               print('sorry minimum 2');
-                                             }
-                                           }),
-                                         new IconButton(
-                                           focusColor: Colors.transparent,
-                                           splashColor: Colors.transparent,
-                                           highlightColor: Colors.transparent,
-                                           icon: Icon(CupertinoIcons.add_circled, color: Colors.deepPurpleAccent.withOpacity(0.8), size: 30.0), 
-                                           onPressed: () {
-                                             if(divisionsTrack <= 9) {
-                                               setState((){
-                                                 divisionsTrack++;
-                                               });
-                                             } else {
-                                               print('sorry maximum 10');
-                                             }
-                                           }),
-                                       ],
-                                     ),
-                                   ),*/
                                     ],
                                   ),
                                   ),
@@ -1188,7 +1124,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                               style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.w500),
                               children: [
                                 new TextSpan(
-                                  text: ' (Maximum categories : 3)',
+                                  text: ' (Maximum: 3)',
                                   style: new TextStyle(color: Colors.grey, fontSize: 12.0, fontWeight: FontWeight.normal),
                                 ),
                               ]
@@ -1201,23 +1137,15 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         new Padding(
-                          padding: EdgeInsets.only(left: 20.0),
-                          child: new IconButton(
-                            icon: new Icon(CupertinoIcons.add_circled,
-                            color: Colors.deepPurpleAccent,
-                            size: 30.0,
-                            ), 
-                            onPressed: () {
-                              setState(() {
-                                print('tag presents on this list' + widget.listfeedbackCategories[widget.index].toString());
-                              });
-                            }),
-                        ),
-                        new Padding(
-                          padding: EdgeInsets.only(left: 0.0, top: 5.0),
-                          child: widget.listfeedbackCategories[widget.index].isEmpty
-                          ? new Text('Add a tag',
+                          padding: EdgeInsets.only(left: 20.0, top: 5.0),
+                          child: new Text('Your tag : ',
                           style: new TextStyle(color: Colors.grey, fontSize: 13.0),
+                          )),
+                        new Padding(
+                          padding: EdgeInsets.only(left: 5.0, top: 5.0),
+                          child: widget.listfeedbackCategories[widget.index].isEmpty
+                          ? new Text('Select a tag below',
+                          style: new TextStyle(color: Colors.grey[600], fontSize: 13.0),
                           )
                           : new Container(
                             height: 30.0,
@@ -1231,7 +1159,34 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                             return new Padding(
                               padding: EdgeInsets.only(left: 10.0),
                               child: new Chip(
-                                onDeleted: (){},
+                                onDeleted: () {
+                                switch(widget.listfeedbackCategories[widget.index][index]) {
+                                  case 0: 
+                                  setState(() {widget.listfeedbackCategories[widget.index].remove(0);});
+                                  break;
+                                  case 1: setState(() {widget.listfeedbackCategories[widget.index].remove(1);});
+                                  break;
+                                  case 2: setState(() {widget.listfeedbackCategories[widget.index].remove(2);});
+                                  break;
+                                  case 3: setState(() {widget.listfeedbackCategories[widget.index].remove(3);});
+                                  break;
+                                  case 4: setState(() {widget.listfeedbackCategories[widget.index].remove(4);});
+                                  break;
+                                  case 5: setState(() {widget.listfeedbackCategories[widget.index].remove(5);});
+                                  break;
+                                  case 6: setState(() {widget.listfeedbackCategories[widget.index].remove(6);});
+                                  break;
+                                  case 7: setState(() {widget.listfeedbackCategories[widget.index].remove(7);});
+                                  break;
+                                  case 8: setState(() {widget.listfeedbackCategories[widget.index].remove(8);});
+                                  break;
+                                  case 9: setState(() {widget.listfeedbackCategories[widget.index].remove(9);});
+                                  break;
+                                  case 10: setState(() {widget.listfeedbackCategories[widget.index].remove(10);});
+                                  break;
+                                  default: print('error switch categorie feedback');
+                                }
+                                },
                                 backgroundColor: 
                                 widget.listfeedbackCategories[widget.index][index] == 0
                               ? Colors.lightBlue[400]
@@ -1280,7 +1235,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                   : widget.listfeedbackCategories[widget.index][index] == 10
                                   ? 'Filling up'
                                   : 'Melodies',
-                                style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                style: new TextStyle(color:  Colors.black, fontSize: 13.0, fontWeight: FontWeight.normal),
                                 ),
                             ),
                             );
@@ -1289,253 +1244,117 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                         ),
                       ],
                     ),
-                    new Padding(
-                      padding: EdgeInsets.only(left: 10.0),
+                     new Padding(
+                      padding: EdgeInsets.only(left: 0.0),
                       child: new Container(
-                height: 35.0,
-                child: new ListView.builder(
-                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                  controller: _categoriesfeedbackListViewController,
-                  physics: new ScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 11,
-                  itemBuilder: (BuildContext context, int index) {
-                    return new Padding(
-                      padding: EdgeInsets.only(left: 10.0),
-                      child: widget.listfeedbackCategories[widget.index].contains(index) == false
-                      ? new Chip(
-                          deleteButtonTooltipMessage: 'Add',
-                          deleteIcon: new Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 20.0),
-                          onDeleted: () {
-                            if(widget.listfeedbackCategories[widget.index].length >= 3) {
-                              print('Maximum reached');
-                            } else {
-                            switch(index) {
-                              case 0: 
-                              setState(() {widget.listfeedbackCategories[widget.index].add(0);});
-                              break;
-                              case 1: setState(() {widget.listfeedbackCategories[widget.index].add(1);});
-                              break;
-                              case 2: setState(() {widget.listfeedbackCategories[widget.index].add(2);});
-                              break;
-                              case 3: setState(() {widget.listfeedbackCategories[widget.index].add(3);});
-                              break;
-                              case 4: setState(() {widget.listfeedbackCategories[widget.index].add(4);});
-                              break;
-                              case 5: setState(() {widget.listfeedbackCategories[widget.index].add(5);});
-                              break;
-                              case 6: setState(() {widget.listfeedbackCategories[widget.index].add(6);});
-                              break;
-                              case 7: setState(() {widget.listfeedbackCategories[widget.index].add(7);});
-                              break;
-                              case 8: setState(() {widget.listfeedbackCategories[widget.index].add(8);});
-                              break;
-                              case 9: setState(() {widget.listfeedbackCategories[widget.index].add(9);});
-                              break;
-                              case 10: setState(() {widget.listfeedbackCategories[widget.index].add(10);});
-                              break;
-                              default: print('error switch categorie feedback');
-                            }
-                            }
-                          },
-                          side: BorderSide(
-                            color: index == 0
-                              ? Colors.lightBlue[400]
-                              :  index == 1
-                              ? Colors.blueGrey[400]
-                              :  index == 2
-                              ? Colors.purple[400]
-                              :  index == 3
-                              ? Colors.cyanAccent
-                              : index == 4
-                              ? Colors.indigoAccent[400]
-                              :  index == 5
-                              ? Color(0xff68FA1E)
-                              :  index == 6
-                              ? Colors.indigo
-                              :  index == 7
-                              ? Colors.pink[400]
-                              :  index == 8
-                              ? Colors.yellow[400]
-                              :  index == 9
-                              ? Colors.purpleAccent[400]
-                              :  index == 10
-                              ? Colors.deepPurple[400]
-                              : Colors.black,
-                          ),
-                          backgroundColor: Colors.black,
-                            label: new Text(
-                              index == 0
-                              ? 'Melodies'
-                              : index == 1
-                              ? 'Vocals'
-                              : index == 2
-                              ? 'Sound Design'
-                              : index == 3
-                              ? 'Composition'
-                              : index == 4
-                              ? 'Drums'
-                              : index == 5
-                              ? 'Bass'
-                              : index == 6
-                              ? 'Automation'
-                              : index == 7
-                              ? 'Mixing'
-                              : index == 8
-                              ? 'Mastering'
-                              : index == 9
-                              ? 'Music theory'
-                              : index == 10
-                              ? 'Filling up'
-                              : 'Melodies',
-                            style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
-                            ),
-                          )
-                        : new Container(),
-                    );
-                  },
-                ),
-                ),
+                      height: 35.0,
+                      child: new ListView.builder(
+                        padding: EdgeInsets.only(left: 0.0, right: 10.0),
+                        controller: _categoriesfeedbackListViewController,
+                        physics: new ScrollPhysics(),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 11,
+                        itemBuilder: (BuildContext context, int index) {
+                          return new Padding(
+                            padding: EdgeInsets.only(left: 10.0),
+                            child: widget.listfeedbackCategories[widget.index].contains(index) == false
+                            ? new Chip(
+                                deleteButtonTooltipMessage: 'Add',
+                                deleteIcon: new Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 20.0),
+                                onDeleted: () {
+                                  if(widget.listfeedbackCategories[widget.index].length >= 3) {
+                                    print('Maximum reached');
+                                  } else {
+                                  switch(index) {
+                                    case 0: 
+                                    setState(() {widget.listfeedbackCategories[widget.index].add(0);});
+                                    break;
+                                    case 1: setState(() {widget.listfeedbackCategories[widget.index].add(1);});
+                                    break;
+                                    case 2: setState(() {widget.listfeedbackCategories[widget.index].add(2);});
+                                    break;
+                                    case 3: setState(() {widget.listfeedbackCategories[widget.index].add(3);});
+                                    break;
+                                    case 4: setState(() {widget.listfeedbackCategories[widget.index].add(4);});
+                                    break;
+                                    case 5: setState(() {widget.listfeedbackCategories[widget.index].add(5);});
+                                    break;
+                                    case 6: setState(() {widget.listfeedbackCategories[widget.index].add(6);});
+                                    break;
+                                    case 7: setState(() {widget.listfeedbackCategories[widget.index].add(7);});
+                                    break;
+                                    case 8: setState(() {widget.listfeedbackCategories[widget.index].add(8);});
+                                    break;
+                                    case 9: setState(() {widget.listfeedbackCategories[widget.index].add(9);});
+                                    break;
+                                    case 10: setState(() {widget.listfeedbackCategories[widget.index].add(10);});
+                                    break;
+                                    default: print('error switch categorie feedback');
+                                  }
+                                  }
+                                },
+                                side: BorderSide(
+                                  color: index == 0
+                                    ? Colors.lightBlue[400]
+                                    :  index == 1
+                                    ? Colors.blueGrey[400]
+                                    :  index == 2
+                                    ? Colors.purple[400]
+                                    :  index == 3
+                                    ? Colors.cyanAccent
+                                    : index == 4
+                                    ? Colors.indigoAccent[400]
+                                    :  index == 5
+                                    ? Color(0xff68FA1E)
+                                    :  index == 6
+                                    ? Colors.indigo
+                                    :  index == 7
+                                    ? Colors.pink[400]
+                                    :  index == 8
+                                    ? Colors.yellow[400]
+                                    :  index == 9
+                                    ? Colors.purpleAccent[400]
+                                    :  index == 10
+                                    ? Colors.deepPurple[400]
+                                    : Colors.black,
+                                ),
+                                backgroundColor: Colors.black,
+                                  label: new Text(
+                                    index == 0
+                                    ? 'Melodies'
+                                    : index == 1
+                                    ? 'Vocals'
+                                    : index == 2
+                                    ? 'Sound Design'
+                                    : index == 3
+                                    ? 'Composition'
+                                    : index == 4
+                                    ? 'Drums'
+                                    : index == 5
+                                    ? 'Bass'
+                                    : index == 6
+                                    ? 'Automation'
+                                    : index == 7
+                                    ? 'Mixing'
+                                    : index == 8
+                                    ? 'Mastering'
+                                    : index == 9
+                                    ? 'Music theory'
+                                    : index == 10
+                                    ? 'Filling up'
+                                    : 'Melodies',
+                                  style: new TextStyle(color:  Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal),
+                                  ),
+                                )
+                              : new Container(),
+                          );
+                        },
+                      ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              /*child: new Container(
-                height: 35.0,
-                child: new ListView.builder(
-                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                  controller: _categoriesfeedbackListViewController,
-                  physics: new ScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 11,
-                  itemBuilder: (BuildContext context, int index) {
-                    return new Padding(
-                      padding: EdgeInsets.only(left: 10.0),
-                      child: new Chip(
-                 
-                        backgroundColor: Colors.pink,
-                        label : new Text('Melodies'),
-                        onDeleted: () {},
-                          ),
-                   /*child: new InkWell(
-                      onTap: () {
-                        switch(index) {
-                          case 0: setState(() {feedbackCategorieChoose = 0;});
-                          break;
-                          case 1: setState(() {feedbackCategorieChoose = 1;});
-                          break;
-                          case 2: setState(() {feedbackCategorieChoose = 2;});
-                          break;
-                          case 3: setState(() {feedbackCategorieChoose = 3;});
-                          break;
-                          case 4: setState(() {feedbackCategorieChoose = 4;});
-                          break;
-                          case 5: setState(() {feedbackCategorieChoose = 5;});
-                          break;
-                          case 6: setState(() {feedbackCategorieChoose = 6;});
-                          break;
-                          case 7: setState(() {feedbackCategorieChoose = 7;});
-                          break;
-                          case 8: setState(() {feedbackCategorieChoose = 8;});
-                          break;
-                          case 9: setState(() {feedbackCategorieChoose = 9;});
-                          break;
-                          case 10: setState(() {feedbackCategorieChoose = 10;});
-                          break;
-                          default: print('error switch categorie feedback');
-                        }
-                      },
-                      borderRadius: new BorderRadius.circular(30.0),
-                    child: new Container(
-                      height: 20.0,
-                      width: 100.0,
-                      decoration: new BoxDecoration(
-                        color: feedbackCategorieChoose == 0 && index == 0
-                          ? Colors.lightBlue[400]
-                          : feedbackCategorieChoose == 1 && index == 1
-                          ? Colors.blueGrey[400]
-                          : feedbackCategorieChoose == 2 && index == 2
-                          ? Colors.purple[400]
-                          : feedbackCategorieChoose == 3 && index == 3
-                          ? Colors.cyanAccent
-                          : feedbackCategorieChoose == 4 && index == 4
-                          ? Colors.indigoAccent[400]
-                          : feedbackCategorieChoose == 5 && index == 5
-                          ? Color(0xff68FA1E)
-                          : feedbackCategorieChoose == 6 && index == 6
-                          ? Colors.indigo
-                          : feedbackCategorieChoose == 7 && index == 7
-                          ? Colors.pink[400]
-                          : feedbackCategorieChoose == 8 && index == 8
-                          ? Colors.yellow[400]
-                          : feedbackCategorieChoose == 9 && index == 9
-                          ? Colors.purpleAccent[400]
-                          : feedbackCategorieChoose == 10 && index == 10
-                          ? Colors.deepPurple[400]
-                          : Colors.black,
-                        borderRadius: new BorderRadius.circular(30.0),
-                        border: new Border.all(
-                          width: 2.0,
-                          color: index == 0
-                          ? Colors.lightBlue[400]
-                          : index == 1
-                          ? Colors.blueGrey[400]
-                          : index == 2
-                          ? Colors.purple[400]
-                          : index == 3
-                          ? Colors.cyanAccent
-                          : index == 4
-                          ? Colors.indigoAccent[400]
-                          : index == 5
-                          ? Color(0xff68FA1E)
-                          : index == 6
-                          ? Colors.indigo
-                          : index == 7
-                          ? Colors.pink[400]
-                          : index == 8
-                          ? Colors.yellow[400]
-                          : index == 9
-                          ? Colors.purpleAccent[400]
-                          : index == 10
-                          ? Colors.deepPurple[400]
-                          : Colors.transparent,
-
-                        ),
-                      ),
-                      child: new Center(
-                        child: new Text(
-                          index == 0
-                          ? 'Melodies'
-                          : index == 1
-                          ? 'Vocals'
-                          : index == 2
-                          ? 'Sound Design'
-                          : index == 3
-                          ? 'Composition'
-                          : index == 4
-                          ? 'Drums'
-                          : index == 5
-                          ? 'Bass'
-                          : index == 6
-                          ? 'Automation'
-                          : index == 7
-                          ? 'Mixing'
-                          : index == 8
-                          ? 'Mastering'
-                          : index == 9
-                          ? 'Music theory'
-                          : index == 10
-                          ? 'Filling up'
-                          : 'Melodies',
-                        style: new TextStyle(color:feedbackCategorieChoose == index ? Colors.black : Colors.white, fontSize: 13.0, fontWeight: feedbackCategorieChoose == index ? FontWeight.bold : FontWeight.normal),
-                        ),
-                      ),
-                      ),
-                      ),*/
-                    );
-                  },
-                ),
-                ),*/
               )
               : new Container(),
             widget.typeOfPost == 'feedback'
@@ -1613,7 +1432,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                       icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: widget.listTextEditingController[widget.index].text.length > 0 ? Colors.cyanAccent :  Colors.grey[600], size: 25.0),
                       onPressed: () {
                         if(widget.typeOfPost == 'feedback' && widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
-                          if(feedbackCategorieChoose != null ) {
+                          if(widget.listfeedbackCategories[widget.index].isNotEmpty) {
                             print('feedback comment go');
                             setState(() {
                               _uploadInProgress = true;
@@ -1626,7 +1445,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                               .collection('comments')
                               .doc('$_timestampCreation${widget.currentUserUsername}')
                               .set({
-                                'feedbackCategorie': feedbackCategorieChoose,
+                                'feedbackCategorie': widget.listfeedbackCategories[widget.index],
                                 'aboutSpecificPartTrack': aboutSpecificPartTrack,
                                 'adminUID': widget.adminUID,
                                 'commentatorProfilephoto': widget.currentUserPhoto,
@@ -1662,7 +1481,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                         .set({
                                           'alreadySeen': false,
                                           'notificationID': _timestampCreation.toString()+widget.currentUser,
-                                          'body': 'has commented this feedback request 🎹 ($feedbackCategorieChoose) : ' + widget.listTextEditingController[widget.index].value.text,
+                                          'body': 'has commented this feedback request 🎹 : ' + widget.listTextEditingController[widget.index].value.text,
                                           'currentNotificationsToken': value.toString(),
                                           'lastUserProfilephoto': widget.currentUserPhoto,
                                           'lastUserUID': widget.currentUser,
@@ -1775,18 +1594,21 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
               ),
               ),
               widget.savedBy.contains(widget.currentUser)
-              ? new Row(
+              ? new Padding(
+                padding: EdgeInsets.only(top: 15.0),
+              child: new Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   new Icon(
                     CupertinoIcons.cloud_download, color: Colors.grey[600], size: 20.0),
                   new Padding(
-                    padding: EdgeInsets.only(left: 8.0, right: 20.0),
+                    padding: EdgeInsets.only(left: 8.0, right: 20.0,),
                     child: new Text('Post already saved',
                     style: new TextStyle(color: Colors.grey[600], fontSize: 13.0, fontWeight: FontWeight.normal),
                     ),
                   ),
                 ],
+              ),
               )
               : new Container(),
               new Padding(
