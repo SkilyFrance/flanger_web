@@ -73,7 +73,7 @@ ScrollController _listRepliesScrollController = new ScrollController();
 
   Stream<dynamic> fechAllReplies() {
     return FirebaseFirestore.instance
-      .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
+      .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
       .doc(widget.postID)
       .collection('comments')
       .doc(widget.commentID)
@@ -529,7 +529,7 @@ ScrollController _listRepliesScrollController = new ScrollController();
                                                         onTap: () {
                                                         Navigator.pop(dialoContext);
                                                         FirebaseFirestore.instance
-                                                          .collection('posts')
+                                                          .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                                           .doc(widget.postID)
                                                           .collection('comments')
                                                           .doc(widget.commentID)
@@ -539,7 +539,7 @@ ScrollController _listRepliesScrollController = new ScrollController();
                                                             ScaffoldMessenger.of(widget.homeContext).showSnackBar(replyDeleted);
                                                           });
                                                           FirebaseFirestore.instance
-                                                            .collection('posts')
+                                                            .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                                             .doc(widget.postID)
                                                             .update({
                                                               'comments': FieldValue.increment(-1),

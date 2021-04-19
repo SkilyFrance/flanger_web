@@ -76,9 +76,10 @@ class CommentContainerState extends State<CommentContainer> {
   ScrollController _listCommentsScrollController = new ScrollController();
   List<TextEditingController> listTextEditingController = [];
   List<FocusNode> listFocusNodeController = [];
+
   Stream<dynamic> fetchAllComments() {
     return FirebaseFirestore.instance
-      .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
+      .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
       .doc(widget.postID)
       .collection('comments')
       .orderBy('timestamp', descending: true)
@@ -662,7 +663,7 @@ class CommentContainerState extends State<CommentContainer> {
                                                       new InkWell(
                                                         onTap: () {
                                                         FirebaseFirestore.instance
-                                                          .collection('posts')
+                                                          .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                                           .doc(widget.postID)
                                                           .collection('comments')
                                                           .doc(ds.data()['timestamp'].toString()+ds.data()['commentatorUsername'])
@@ -671,7 +672,7 @@ class CommentContainerState extends State<CommentContainer> {
                                                             ScaffoldMessenger.of(widget.homeContext).showSnackBar(commentDeleted);
                                                           });
                                                           FirebaseFirestore.instance
-                                                            .collection('posts')
+                                                            .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                                             .doc(widget.postID)
                                                             .update({
                                                               'comments': FieldValue.increment(-1),
@@ -802,7 +803,7 @@ class CommentContainerState extends State<CommentContainer> {
                             widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
                             int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
                             FirebaseFirestore.instance
-                              .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
+                              .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                               .doc(widget.postID)
                               .collection('comments')
                               .doc(ds['timestamp'].toString()+ds['commentatorUsername'])
@@ -825,7 +826,7 @@ class CommentContainerState extends State<CommentContainer> {
                                  _uploadInProgress = false;
                                  });
                                 FirebaseFirestore.instance
-                                  .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
+                                  .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                   .doc(widget.postID)
                                   .update({
                                     'comments': FieldValue.increment(1),
@@ -845,7 +846,7 @@ class CommentContainerState extends State<CommentContainer> {
                                         .set({
                                           'alreadySeen': false,
                                           'notificationID': _timestampCreation.toString()+widget.currentUser,
-                                          'body': 'has replied under your comment 💬',
+                                          'body': widget.typeOfPost == 'feedback' ? 'has commented this feedback request 🎹 : ' + listTextEditingController[index].value.text :  'has replied under your comment 💬',
                                           'currentNotificationsToken': value.toString(),
                                           'lastUserProfilephoto': widget.currentUserPhoto,
                                           'lastUserUID': widget.currentUser,
@@ -864,7 +865,7 @@ class CommentContainerState extends State<CommentContainer> {
                                         .set({
                                           'alreadySeen': false,
                                           'notificationID': _timestampCreation.toString()+widget.currentUser,
-                                          'body': 'has replied under a comment 💬',
+                                          'body': widget.typeOfPost == 'feedback' ? 'has commented this feedback request 🎹 : ' + listTextEditingController[index].value.text : 'has replied under a comment 💬',
                                           'currentNotificationsToken': value.toString(),
                                           'lastUserProfilephoto': widget.currentUserPhoto,
                                           'lastUserUID': widget.currentUser,

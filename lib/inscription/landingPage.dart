@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flanger_web_version/inscription/sign.dart';
 import 'package:flanger_web_version/inscription/signIn.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +14,12 @@ class LandinPageState extends State<LandinPage> {
 
   @override
   void initState() {
+    print(Timestamp.now().microsecondsSinceEpoch);
     super.initState();
   }
+
+
+  int lastUpdate = 1618841639718000;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +41,35 @@ class LandinPageState extends State<LandinPage> {
             ),
             ),
           ),
+          new Padding(
+            padding: EdgeInsets.only(top: 20.0),
+            child: new Center(
+              child: new RichText(
+                text: new TextSpan(
+                  text: 'Pre-released :  ',
+                  style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.normal),
+                  children: [
+                    new TextSpan(
+                      text: lastUpdate != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inMinutes < 1
+                    ? 'few sec ago.'
+                    : lastUpdate != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inMinutes < 60
+                    ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inMinutes.toString() + ' min ago.'
+                    : lastUpdate != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inMinutes >= 60
+                    && lastUpdate != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inHours <= 24
+                    ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inHours.toString() + ' hours ago.'
+                    : lastUpdate != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inHours >= 24
+                    ? DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(lastUpdate)).inDays.toString() + ' days ago.'
+                    : '',
+                    style:  new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: FontWeight.normal,
+                    height: 1.1,
+                    ),
+                    ),
+                  ]
+                ),
+              ),
+
+              ),
+            ),
           new Container(
             height: MediaQuery.of(context).size.height*0.02,
             width: MediaQuery.of(context).size.width,

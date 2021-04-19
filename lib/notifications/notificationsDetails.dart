@@ -148,6 +148,8 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                 ? Color(0xffBF88FF)
                                 : widget.snapshot.data['typeOfPost'] == 'project'
                                 ? Colors.lightBlue
+                                : widget.snapshot.data['typeOfPost'] == 'feedback'
+                                ? Colors.orange
                                 : Color(0xff62DDF9),
                                 borderRadius: new BorderRadius.only(
                                   topLeft: Radius.circular(10.0),
@@ -523,7 +525,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                 ScaffoldMessenger.of(context).showSnackBar(postAlreadySaved);
                               } else {
                               FirebaseFirestore.instance
-                                .collection('posts')
+                                .collection(widget.snapshot.data['typeOfPost'] == 'feedback'? 'feedbacks' : 'posts')
                                 .doc(widget.snapshot.data['postID'])
                                 .update({
                                   'savedBy': FieldValue.arrayUnion([widget.currentUser]),
@@ -548,7 +550,9 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                      widget.snapshot.data['typeOfPost'] == 'feedback'
                       ? new Padding(
                         padding: EdgeInsets.only(top: 20.0,left: 0.0, right: 0.0, bottom: 40.0),
-                        child: new Container(
+                        child: new StatefulBuilder(
+                          builder: (BuildContext contextForAudio, StateSetter audioSetState) {
+                            return new Container(
                           height: 100.0,
                                         child: new Column(
                                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -585,17 +589,17 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                                   ), 
                                                   onPressed: () async {
                                                     if(_trackURLPlaying != widget.snapshot.data['trackURL']) {
-                                                      setState(() {
+                                                      audioSetState(() {
                                                         _trackURLPlaying = widget.snapshot.data['trackURL'];
                                                       });
                                                     ////////////////////
                                                     await postContainerAudioPlayer.setUrl(widget.snapshot.data['trackURL']).whenComplete(() async {
                                                       postContainerAudioPlayer.durationStream.listen((event) {
-                                                        setState(() {
+                                                        audioSetState(() {
                                                           postContainerDurationTrack = postContainerAudioPlayer.duration;
                                                         });
                                                         postContainerAudioPlayer.positionStream.listen((event) {
-                                                          setState(() {
+                                                          audioSetState(() {
                                                             postContainerCurrentPositionTrack = event;
                                                           });
                                                           //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
@@ -663,7 +667,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                                           child: new RangeSlider(
                                                             labels: RangeLabels('',''),
                                                             min: 0.0,
-                                                            max: 222693,
+                                                            max: postContainerDurationTrack != null ? postContainerDurationTrack.inMilliseconds.toDouble() : widget.snapshot.data['trackDuration'],
                                                             values: new RangeValues(widget.snapshot.data['startParticularPart'].toDouble(), widget.snapshot.data['endParticularPart'].toDouble()),
                                                             onChangeStart: (value) {},
                                                             onChanged: (value) {},
@@ -687,7 +691,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                                           child: new Slider(
                                                             label: new Duration(milliseconds: (postContainerTrackDragStart).toInt()).toString().split('.')[0],
                                                             min: 0.0,
-                                                            max: 222693,
+                                                            max: postContainerDurationTrack != null ? postContainerDurationTrack.inMilliseconds.toDouble() : widget.snapshot.data['trackDuration'],
                                                             value: postContainerAudioPlayer.playerState.playing == true ? postContainerCurrentPositionTrack.inMilliseconds.toDouble() : postContainerTrackDragStart,
                                                             onChangeStart: (value) {
                                                               if(postContainerAudioPlayer.playerState.playing == true) {
@@ -695,7 +699,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                                               }
                                                             },
                                                             onChanged: (value) {
-                                                              setState((){
+                                                              audioSetState((){
                                                                 postContainerTrackDragStart = value;
                                                               });
                                                             },
@@ -738,7 +742,9 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                               ),
                                             ],
                                           ),
-                        ),
+                          );
+                          },
+                          ),
                       )
                       : new Container(),
                           new Padding(
@@ -758,12 +764,14 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                   onTap: () {
                                   if(widget.snapshot.data['likedBy'].contains(widget.currentUser)) {
                                   deletelikeRequest(
+                                    widget.snapshot.data['typeOfPost'],
                                     widget.snapshot.data['postID'], 
                                     widget.snapshot.data['likes'], 
                                     widget.currentUser, 
                                     widget.snapshot.data['likedBy']);
                                   } else {
                                   likeRequest(
+                                  widget.snapshot.data['typeOfPost'],
                                   widget.snapshot.data['postID'], 
                                   widget.snapshot.data['likes'],
                                   widget.snapshot.data['subject'], 
@@ -802,12 +810,14 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                   onTap: () {
                                   if(widget.snapshot.data['firedBy'].contains(widget.currentUser)) {
                                     deleteFireRequest(
+                                      widget.snapshot.data['typeOfPost'],
                                       widget.snapshot.data['postID'], 
                                       widget.snapshot.data['fires'], 
                                       widget.currentUser, 
                                       widget.snapshot.data['firedBy']);
                                   } else {
                                     fireRequest(
+                                      widget.snapshot.data['typeOfPost'],
                                       widget.snapshot.data['postID'], 
                                       widget.snapshot.data['fires'], 
                                       widget.snapshot.data['subject'], 
@@ -846,12 +856,14 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                   onTap: () {
                                 if(widget.snapshot.data['rocketedBy'].contains(widget.currentUser)) {
                                   deleteRocketRequest(
+                                    widget.snapshot.data['typeOfPost'],
                                     widget.snapshot.data['postID'], 
                                     widget.snapshot.data['rockets'], 
                                     widget.currentUser, 
                                     widget.snapshot.data['rocketedBy']);
                                 } else {
                                   rocketRequest(
+                                    widget.snapshot.data['typeOfPost'],
                                     widget.snapshot.data['postID'], 
                                     widget.snapshot.data['rockets'], 
                                     widget.snapshot.data['subject'], 
@@ -1238,7 +1250,7 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                 controller: _postCommentEditingController,
                                 cursorColor: Colors.white,
                                 obscureText: false,
-                                onChanged: (value) {
+                                onChanged: (value) {                                  
                                   if(_postCommentEditingController.text.length > 0 && _postCommentEditingController.text.length == 1) {
                                     setState(() {});
                                   } else if (_postCommentEditingController.text.length == 0) {
@@ -1249,7 +1261,81 @@ class NotificationsDetailsState extends State<NotificationsDetails> with Automat
                                   suffixIcon: new IconButton(
                                     icon: new Icon(CupertinoIcons.arrow_up_circle_fill, color: _postCommentEditingController.text.length > 0 ? Colors.cyanAccent :  Colors.grey[600], size: 25.0),
                                     onPressed: () {
-                                      if(_postCommentEditingController.text.length > 1 && _postCommentEditingController.value.text != '  ') {
+                                      if(widget.snapshot.data['typeOfPost'] == 'feedback' && _postCommentEditingController.text.length > 1 && _postCommentEditingController.value.text != '  ') {
+                          if(listfeedbackCategories.isNotEmpty) {
+                            print('feedback comment go');
+                            setState(() {
+                              _uploadInProgress = true;
+                            });
+                            widget.snapshot.data['reactedBy'][widget.currentUser] = widget.currentNotificationsToken;
+                            int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+                            FirebaseFirestore.instance
+                              .collection('feedbacks')
+                              .doc(widget.snapshot.data['postID'])
+                              .collection('comments')
+                              .doc('$_timestampCreation${widget.currentUserUsername}')
+                              .set({
+                                'feedbackCategorie': listfeedbackCategories,
+                                'aboutSpecificPartTrack': aboutSpecificPartTrack,
+                                'adminUID': widget.snapshot.data['adminUID'],
+                                'commentatorProfilephoto': widget.currentUserPhoto,
+                                'commentatorSoundCloud': widget.currentSoundCloud,
+                                'commentatorUID': widget.currentUser,
+                                'commentatorUsername': widget.currentUserUsername,
+                                'content': _postCommentEditingController.value.text,
+                                'postID': widget.snapshot.data['postID'],
+                                'subject': widget.snapshot.data['subject'],
+                                'timestamp': _timestampCreation,
+                              }).whenComplete(() {
+                               _postCommentEditingController.clear();
+                               setState((){
+                                 _uploadInProgress = false;
+                                 });
+                                FirebaseFirestore.instance
+                                  .collection('feedbacks')
+                                  .doc(widget.snapshot.data['postID'])
+                                  .update({
+                                    'comments': FieldValue.increment(1),
+                                    'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                    'reactedBy': widget.snapshot.data['reactedBy'],
+                                  }).whenComplete(() {
+                                    widget.snapshot.data['reactedBy'].forEach((key, value) {
+                                      if(key == widget.currentUser) {
+                                        print('No send notification here cause it is current user.');
+                                      } else {
+                                      FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(key.toString())
+                                        .collection('notifications')
+                                        .doc(_timestampCreation.toString()+widget.currentUser)
+                                        .set({
+                                          'alreadySeen': false,
+                                          'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                          'body': 'has commented this feedback request 🎹 : ' + _postCommentEditingController.value.text,
+                                          'currentNotificationsToken': value.toString(),
+                                          'lastUserProfilephoto': widget.currentUserPhoto,
+                                          'lastUserUID': widget.currentUser,
+                                          'lastUserUsername': widget.currentUserUsername,
+                                          'postID': widget.snapshot.data['postID'],
+                                          'title': widget.snapshot.data['subject'],
+                                        }).whenComplete(() {
+                                          print('Cloud Firestore : notifications updated for $key');
+                                          setState(() {
+                                            listfeedbackCategories = [];
+                                          });
+                                          _postCommentFocusNode.unfocus();
+                                          setState(() {});
+                                        });
+                                      }
+                                    });
+                                  });
+                              });
+                          } else {
+                            print('Choose a category');
+                          }
+
+
+                                      } else if (widget.snapshot.data['typeOfPost'] != 'feedback' && _postCommentEditingController.text.length > 1 && _postCommentEditingController.value.text != '  ') {
                                       setState(() {
                                         _uploadInProgress = true;
                                       });

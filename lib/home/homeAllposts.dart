@@ -4,20 +4,19 @@ import 'dart:math';
 import 'package:just_audio/just_audio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flanger_web_version/bodyEditing.dart';
-import 'package:flanger_web_version/postContainer.dart';
+import 'package:flanger_web_version/home/postContainer.dart';
 import 'package:flanger_web_version/requestList.dart';
 import 'package:flanger_web_version/subjectEditing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'requestList.dart';
+import '../requestList.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
-import 'requestList.dart';
-
+import '../requestList.dart';
 
 
-class HomePage extends StatefulWidget {
+
+class HomeAllPosts extends StatefulWidget {
 
   String currentUser;
   String currentUserUsername;
@@ -32,7 +31,7 @@ class HomePage extends StatefulWidget {
   String currentMixcloud;
   String currentNotificationsToken;
 
-  HomePage({
+  HomeAllPosts({
     Key key, 
     this.currentUser, 
     this.currentUserUsername,
@@ -50,11 +49,11 @@ class HomePage extends StatefulWidget {
 
 
   @override
-  HomePageState createState() => HomePageState();
+  HomeAllPostsState createState() => HomeAllPostsState();
 }
 
 
-class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+class HomeAllPostsState extends State<HomeAllPosts> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -63,10 +62,6 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   PageController _pageViewBodyController;
 
 
-  Stream<dynamic> _fetchIssuesPosts;
-  Stream<dynamic> _fetchTipsPosts;
-  Stream<dynamic> _fetchProjectPosts;
-  Stream<dynamic> _fetchTestFeedback;
 
   //Variables to change screen
   //
@@ -101,11 +96,12 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   bool _musicIsUploaded = false;
   bool _musicUploadedInProgress = false;
   File _musicUploaded;
+  String _fileURLuploadedInStorage;
   Duration durationFileUploaded; //= Duration(milliseconds: 120);
   Duration currentPositionFeedbackPlayer;//= = Duration(milliseconds: 10);
   Duration currentBufferingFeedbackPlayer;//= = Duration(milliseconds: 10);
   double _dragValueStartFeedback = 0;
-  double _dragValueEndFeedback = 60000; //222693;
+  double _dragValueEndFeedback; //222693;
   int _trackSplitFeedback = 6;
   ///////////////////////////////////////
   
@@ -117,52 +113,19 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   double postContainerTrackDragStart = 0.0;
   ///////////////////////////////////////
 
-  
-  
-  /*Stream<dynamic> fetchAllPostsRecent() {
+
+  Stream<dynamic> _fetchTips;
+  Stream<dynamic> fetchTips() {
     setState(() {
       _searchingInProgress = true;
     });
      initializationTimer();
     return FirebaseFirestore.instance
       .collection('posts')
-      .orderBy('timestamp', descending: true)
-      .snapshots();
-    }*/
-
-
-  Stream<dynamic> fetchTestForFeedback() {
-    setState(() {
-      _searchingInProgress = true;
-    });
-     initializationTimer();
-    return FirebaseFirestore.instance
-      .collection('test')
       .orderBy('timestamp', descending: true)
       .snapshots();
     }
   
-
-  Stream<dynamic> fetchIssuesPosts() {
-    return FirebaseFirestore.instance
-      .collection('posts')
-      .where('typeOfPost', isEqualTo: 'issue')
-      .snapshots();
-  }
-
-  Stream<dynamic> fetchTipsPosts() {
-    return FirebaseFirestore.instance
-      .collection('posts')
-      .where('typeOfPost', isEqualTo: 'tip')
-      .snapshots();
-  }
-
-  Stream<dynamic> fetchProjectPosts() {
-    return FirebaseFirestore.instance
-      .collection('posts')
-      .where('typeOfPost', isEqualTo: 'project')
-      .snapshots();
-  }
 
   initializationTimer() {
   return Timer(Duration(seconds: 10), () {
@@ -177,11 +140,8 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 @override
   void initState() {
     tipsIsCurrentScreen = true;
+    _fetchTips = fetchTips();
     _pageViewBodyController = new PageController(initialPage: 0, viewportFraction: 1);
-    _fetchTipsPosts = fetchTipsPosts();
-    _fetchTestFeedback = fetchTestForFeedback();
-    _fetchIssuesPosts = fetchIssuesPosts();
-    _fetchProjectPosts = fetchProjectPosts();
     print('soundCloud = ' + widget.currentSoundCloud);
     print('Spotify = ' + widget.currentSpotify);
     _feedScrollController = new ScrollController();
@@ -281,7 +241,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             ),
                            categoryPosted == 3
                            ? new Container(
-                             child: new Column(
+                             child: new StatefulBuilder(
+                               builder: (BuildContext audioContext, StateSetter audioSetState) {
+                             return new Column(
                                mainAxisAlignment: MainAxisAlignment.start,
                                children: [
                                 new Padding(
@@ -299,7 +261,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                   padding: EdgeInsets.only(top: 20.0),
                                   child: 
                                   _musicIsUploaded == false && _musicUploadedInProgress == false
-                                  ? new InkWell(
+                                  ?  new InkWell(
                                     onTap: () async {
                                     if(kIsWeb) {
                                         InputElement uploadInput = FileUploadInputElement();
@@ -311,18 +273,21 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                           reader.readAsDataUrl(musicFile);
                                           reader.onLoadEnd.listen((loadEndEvent) async {
                                             print('Reader job done');
-                                            dialogSetState(() {
+                                            audioSetState(() {
                                               _musicUploadedInProgress = true;
                                               _musicUploaded = musicFile;
                                             });
+                                            int _timeStampFileURL = DateTime.now().microsecondsSinceEpoch;
                                             final _storage = firebase_storage.FirebaseStorage.instance;
                                             var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
-                                            var snapshot = await ref.child('${widget.currentUser}/temporaryPathTrackUploaded').putBlob(_musicUploaded);
-                                            print('Firebase storage (Temporary path) : Track uploaded.');
+                                            var snapshot = await ref.child('${widget.currentUser}/feedbacktrack/$_timeStampFileURL').putBlob(_musicUploaded);
+                                            //var snapshot = await ref.child('${widget.currentUser}/temporaryPathTrackUploaded').putBlob(_musicUploaded);
+                                            print('Firebase storage (real path) : Track uploaded.');
                                             var downloadUrl = await snapshot.ref.getDownloadURL().then((fileURL) async {
                                             await _feedbackAudioPlayer.setUrl(fileURL).whenComplete(() async {
                                                 _feedbackAudioPlayer.durationStream.listen((event) {
-                                                  dialogSetState((){
+                                                  audioSetState(() {
+                                                _fileURLuploadedInStorage = fileURL;
                                                  _musicUploadedInProgress  = false;
                                                  durationFileUploaded = _feedbackAudioPlayer.duration;
                                                  _dragValueEndFeedback = _feedbackAudioPlayer.duration.inMilliseconds.toDouble();
@@ -333,13 +298,13 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                 
                                                   });
                                                  _feedbackAudioPlayer.bufferedPositionStream.listen((event) {
-                                                   dialogSetState((){
+                                                   audioSetState((){
                                                      currentBufferingFeedbackPlayer = event;
                                                    });
                                                  //  print('currentBufferingFeedbackPlayer = ' + currentBufferingFeedbackPlayer.inMilliseconds.toString());
                                                  });
                                                _feedbackAudioPlayer.positionStream.listen((event) {
-                                                   dialogSetState((){
+                                                   audioSetState((){
                                                      currentPositionFeedbackPlayer = event;
                                                    });
                                                    print('_dragValueEndFeedback = ' + Duration(milliseconds: _dragValueEndFeedback.toInt()).toString());
@@ -402,8 +367,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                             ),
                                         ],
                                         ),
+                                        
                                       ),
-                                    ),
+                                  ),
                                   ),
                                 _musicIsUploaded == true
                                ? new Padding(
@@ -420,7 +386,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                 new Padding(
                                   padding: EdgeInsets.only(top: 0.0),
                                   child: new Center(
-                                    child: new Text('Get a feedback from a particular part ?',
+                                    child: new Text('Put forward a particular part ?',
                                     style: new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: FontWeight.normal),
                                     ),
                                   ),
@@ -491,7 +457,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                                     }
                                                   },
                                                   onChanged: (value) {
-                                                    dialogSetState((){
+                                                    audioSetState((){
                                                       _dragValueStartFeedback = value.start;
                                                       _dragValueEndFeedback = value.end;
                                                     });
@@ -515,7 +481,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                            icon: Icon(CupertinoIcons.minus_circled, color: Colors.deepPurpleAccent.withOpacity(0.5), size: 30.0), 
                                            onPressed: () {
                                              if(_trackSplitFeedback > 2) {
-                                               dialogSetState((){
+                                               audioSetState((){
                                                  _trackSplitFeedback--;
                                                });
                                              } else {
@@ -529,7 +495,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                                            icon: Icon(CupertinoIcons.add_circled, color: Colors.deepPurpleAccent.withOpacity(0.8), size: 30.0), 
                                            onPressed: () {
                                              if(_trackSplitFeedback <= 9) {
-                                               dialogSetState((){
+                                               audioSetState((){
                                                  _trackSplitFeedback++;
                                                });
                                              } else {
@@ -599,7 +565,8 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                               ),
                               ),
                                ],
-                             ),
+                             );
+                              }),
                            )
                            /// VIEW CATEGORY POST 1 - 3
                            : new Container(
@@ -675,18 +642,15 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                       ),
                       content: new Padding(
                         padding: EdgeInsets.only(left: 50.0, right: 50.0),
-                      child: new InkWell(
+                      child: new Container(
+                        child: new StatefulBuilder(
+                          builder: (BuildContext contextButton, StateSetter publicationButtonSetState) {
+                            return new InkWell(
                         onTap: () async  {
                           if(categoryPosted == 3 && _musicUploaded != null && _bodyEditingController.text.length > 3) {
                           _feedbackAudioPlayer.stop();
-                          int _timeStampFileURL = DateTime.now().microsecondsSinceEpoch;
-                           final _storage = firebase_storage.FirebaseStorage.instance;
-                           var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
-                           var snapshot = await ref.child('${widget.currentUser}/feedbacktrack/$_timeStampFileURL').putBlob(_musicUploaded);
-                           print('Firebase storage (Temporary path) : Track uploaded.');
-                           var downloadUrl = await snapshot.ref.getDownloadURL().then((fileURL) async {
-                            feedbackPublication(
-                            fileURL,
+                            publicationRequestForFeedback(
+                            _fileURLuploadedInStorage,
                             durationFileUploaded.inMilliseconds.toDouble(),
                             _trackSplitFeedback,
                             _dragValueStartFeedback,
@@ -698,15 +662,14 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             widget.currentSoundCloud,
                             _bodyEditingController.value.text, 
                             'Feedback section', 
-                            dialogSetState, 
+                            publicationButtonSetState, 
                             publishingInProgress, 
-                            contextDialog, 
+                            contextButton, 
                             _subjectEditingController,
                             _bodyEditingController, 
                             categoryPosted);
-                           });
                           } else if((categoryPosted == 0 || categoryPosted == 1 || categoryPosted == 2) &&_subjectEditingController.text.length > 3 && _bodyEditingController.text.length > 3 && categoryPosted != null) {
-                          publicationRequest(
+                          publicationRequestForPost(
                             widget.currentUser, 
                             widget.currentUserUsername, 
                             widget.currentUserPhoto, 
@@ -714,9 +677,9 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             widget.currentSoundCloud,
                             _bodyEditingController.value.text, 
                             _subjectEditingController.value.text, 
-                            dialogSetState, 
+                            publicationButtonSetState, 
                             publishingInProgress, 
-                            contextDialog, 
+                            contextButton, 
                             _subjectEditingController,
                             _bodyEditingController, 
                             categoryPosted);
@@ -747,11 +710,14 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                             ),
                           ),
                         ),
+                      );
+                          }
                       ),
+
                     ),
                   //   ),
                     //  ),
-                  );
+                  ));
                   });
               } 
             ).whenComplete(() {
@@ -769,7 +735,8 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
         child: new Icon(CupertinoIcons.bolt_horizontal_circle_fill, color: Colors.white),
         ),
       backgroundColor: Color(0xff121212),
-      body: new Container(
+      body:
+      new Container(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
        child: new Stack(
@@ -795,7 +762,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
              new Padding(
                 padding: EdgeInsets.only(top: 50.0),
                 child: new Center(
-                  child: new Text('Home',
+                  child: new Text('All posts',
                   style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30.0)
                   ),
                 ),
@@ -814,119 +781,6 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                     ),
                   ],
                 )
-              ),
-              new Padding(
-                padding: EdgeInsets.only(top: 20.0),
-                child: new Center(
-                  child: new Container(
-                    height: 40.0,
-                    width: 450.0,
-                    color: Colors.transparent,
-                    child: new Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        new InkWell(
-                          onTap: () {
-                            setState(() {
-                              issuesIsCurrentScreen = false;
-                              tipsIsCurrentScreen = true;
-                              projectIsCurrentScreen = false;
-                              feedbackIsCurrentScreen = false;
-                            });
-                          },
-                        child: new Container(
-                          height: 40.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            border: new Border.all(
-                             width: 2.0,
-                             color: tipsIsCurrentScreen == true ?  Color(0xff62DDF9) : Colors.grey[900],
-                            ),
-                            color: Colors.black.withOpacity(0.5),
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                          child: new Text('Tips',
-                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
-                          )),
-                        )),
-                        new InkWell(
-                          onTap: () {
-                            setState(() { 
-                              issuesIsCurrentScreen = false;
-                              tipsIsCurrentScreen = false;
-                              projectIsCurrentScreen = false;
-                              feedbackIsCurrentScreen = true;
-                            });
-                          },
-                        child: new Container(
-                          height: 40.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            border: new Border.all(
-                             width: 2.0,
-                             color: feedbackIsCurrentScreen == true ? Colors.purpleAccent : Colors.grey[900],
-                            ),
-                            color: Colors.black.withOpacity(0.5),
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                          child: new Text('Feedbacks',
-                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
-                          )),
-                        )),
-                        new InkWell(
-                          onTap: () {
-                            setState(() {
-                              issuesIsCurrentScreen = true;
-                              tipsIsCurrentScreen = false;
-                              projectIsCurrentScreen = false;
-                              feedbackIsCurrentScreen = false;
-                            });
-                          },
-                        child: new Container(
-                          height: 40.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            border: new Border.all(
-                             width: 2.0,
-                             color: Colors.grey[900], //currentScreen == issuesScreen ? Color(0xff7360FC) : Colors.grey[900],
-                            ),
-                            color: Colors.black.withOpacity(0.5),
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                          child: new Text('Issues',
-                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
-                          )),
-                        )),
-                        new InkWell(
-                          onTap: () {
-                            setState(() {
-                      
-                            });
-                          },
-                        child: new Container(
-                          height: 40.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            border: new Border.all(
-                             width: 2.0,
-                             color:  Colors.grey[900], // currentScreen == projectScreen ? Color(0xffBF88FF) : Colors.grey[900],
-                            ),
-                            color: Colors.black.withOpacity(0.5),
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                          child: new Text('Projects',
-                              style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal)
-                          )),
-                        ),
-                        ),
-                      ],
-                    )
-                  ),
-                ),
               ),
 
                                   /*new Padding(
@@ -977,7 +831,7 @@ class HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
                     maxWidth: 850.0,
                   ),
                 child: new StreamBuilder(
-                      stream: _fetchTestFeedback,
+                      stream: _fetchTips,
                       builder: (BuildContext contex, AsyncSnapshot<dynamic> snapshot) {
                       if(snapshot.connectionState == ConnectionState.waiting) {
                       return  new Container(

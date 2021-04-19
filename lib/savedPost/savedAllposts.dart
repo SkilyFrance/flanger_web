@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flanger_web_version/postContainer.dart';
+import 'package:flanger_web_version/home/postContainer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 
-class SavedPostPage extends StatefulWidget {
+class SavedAllPost extends StatefulWidget {
 
   String currentUser;
   String currentUserUsername;
@@ -23,7 +23,7 @@ class SavedPostPage extends StatefulWidget {
   String currentNotificationsToken;
 
 
-  SavedPostPage({
+  SavedAllPost({
     Key key, 
     this.currentUser, 
     this.currentUserUsername,
@@ -41,16 +41,18 @@ class SavedPostPage extends StatefulWidget {
 
 
   @override
-  SavedPostPageState createState() => SavedPostPageState();
+  SavedAllPostState createState() => SavedAllPostState();
 }
 
 
-class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveClientMixin {
+class SavedAllPostState extends State<SavedAllPost> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  Stream<dynamic> _fetchAllSavedPosts;
+  bool feedbackPostShowing = false;
+
   ScrollController _listPostScrollController = ScrollController();
+  ScrollController _listFeedbackScrollController = ScrollController();
   List<bool> listIsExpanded = [];
   List<TextEditingController> listTextEditingController = [];
   List<FocusNode> listFocusNodeController = [];
@@ -72,35 +74,19 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
   double postContainerTrackDragStart = 0.0;
   ///////////////////////////////////////
   
-
+  Stream<dynamic> _fetchAllSavedPosts;
   Stream<dynamic> fetchAllSavedPosts() {
     setState(() {
       _searchingInProgress = true;
     });
      initializationTimer();
     return FirebaseFirestore.instance
-      //.collection('posts')
-      .collection('test')
+      .collection('posts')
       .where('savedBy', arrayContains: widget.currentUser)
-      //.orderBy('timestamp', descending: true)
       .snapshots();
   }
 
-  String currentSoundCloud;
-  String currentNotificationsToken;
-  getCurrentSoundCloud() {
-    FirebaseFirestore.instance
-      .collection('users')
-      .doc(widget.currentUser)
-      .get().then((value) {
-        if(value.exists) {
-          setState(() {
-            currentSoundCloud = value.data()['soundCloud'];
-            currentNotificationsToken = value.data()['notificationsToken'];
-          });
-        }
-      });
-  }
+
 
   initializationTimer() {
   return Timer(Duration(seconds: 10), () {
@@ -114,7 +100,6 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
 @override
   void initState() {
     _fetchAllSavedPosts = fetchAllSavedPosts();
-    getCurrentSoundCloud();
     _listPostScrollController = new ScrollController();
     super.initState();
   }
@@ -145,7 +130,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
             FocusScope.of(context).requestFocus(new FocusNode());
             },
         child: new SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: new AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(bottom: 100.0),
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -153,7 +138,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
               new Padding(
                 padding: EdgeInsets.only(top: 50.0),
                 child: new Center(
-                  child: new Text('Saved post',
+                  child: new Text('All saved posts',
                   style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30.0)
                   ),
                 ),
@@ -173,68 +158,12 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                   ],
                 )
               ),
-              /*new Padding(
-                padding: EdgeInsets.only(top: 50.0),
-                child: new Center(
-                child: new Container(
-                  height: 90.0,
-                  width: MediaQuery.of(context).size.width*0.70,
-                  constraints: new BoxConstraints(
-                    minWidth: 500.0,
-                    maxWidth: 700.0,
-                  ),
-                  decoration: new BoxDecoration(
-                    color: Colors.grey[900].withOpacity(0.5),
-                    borderRadius: new BorderRadius.circular(10.0),
-                  ),
-                  child: new Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                     new Padding(
-                       padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                          child: new Container(
-                            constraints: new BoxConstraints(
-                              minWidth: 150.0,
-                              maxWidth: 500.0,
-                            ),
-                          decoration: new BoxDecoration(
-                            color: Colors.grey[800],
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                        child: new TextField(
-                          textAlignVertical: TextAlignVertical.center,
-                          textAlign: TextAlign.left,
-                          style: new TextStyle(color: Colors.white, fontSize: 13.0),
-                          keyboardType: TextInputType.text,
-                          scrollPhysics: new ScrollPhysics(),
-                          keyboardAppearance: Brightness.dark,
-                          minLines: 1,
-                          maxLines: 1,
-                          controller: _postEditingController,
-                          cursorColor: Colors.white,
-                          obscureText: false,
-                          decoration: new InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Password',
-                            hintStyle: new TextStyle(
-                              color: Colors.grey,
-                              fontSize: 15.0,
-                            ),
-                          ),
-                        ),
-                       ),
-                     ),
-                    ],
-                  ),
-                ),
-                ),
-              ),*/
-              new Padding(
+               new Padding(
                 padding: EdgeInsets.only(top: 50.0),
                 child: new Container(
                   constraints: new BoxConstraints(
                     minWidth: 500.0,
-                    maxWidth: 850.0
+                    maxWidth: 850.0,
                   ),
                 child: new StreamBuilder(
                   stream: _fetchAllSavedPosts,
@@ -303,6 +232,7 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                       return new Container(
                         width: MediaQuery.of(context).size.width,
                         child: new ListView.builder(
+                          scrollDirection: Axis.vertical,
                           controller: _listPostScrollController,
                           physics: new NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
@@ -362,10 +292,10 @@ class SavedPostPageState extends State<SavedPostPage> with AutomaticKeepAliveCli
                                     commentedBy: ds['commentedBy'],
                                     reactedBy: ds['reactedBy'],
                                     savedBy: arrayOfSavedBy,
-                                   /* postContainerAudioPlayer: postContainerAudioPlayer,
+                                    postContainerAudioPlayer: postContainerAudioPlayer,
                                     postContainerDurationTrack: postContainerDurationTrack,
                                     postContainerCurrentPositionTrack: postContainerCurrentPositionTrack,
-                                    postContainerTrackDragStart: postContainerTrackDragStart,*/
+                                    postContainerTrackDragStart: postContainerTrackDragStart,
                                     adminProfilephoto: ds['adminProfilephoto'],
                                     adminUsername: ds['adminUsername'],
                                     adminNotificationsToken: ds['adminNotificationsToken'],

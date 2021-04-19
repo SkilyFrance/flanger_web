@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-publicationRequest(
+publicationRequestForPost(
   String currentUser,
   String currentUserUsername,
   String currentUserPhoto,
@@ -25,8 +25,7 @@ publicationRequest(
   
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    //.collection('posts')
-    .collection('test')
+    .collection('posts')
     .doc('$_timestampCreation$currentUser')
     .set({
       'adminNotificationsToken': currentNotificationsToken,
@@ -66,7 +65,7 @@ publicationRequest(
     });
 }
 
-  feedbackPublication(
+  publicationRequestForFeedback(
   String trackURL,
   double trackDuration,
   int divisions,
@@ -85,18 +84,10 @@ publicationRequest(
   TextEditingController subjectEditingController, 
   TextEditingController bodyEditingController, 
   int typeOfPost) {
-
-
   List<String> keywords;
-  setState((){
-    publishingInProgress = true;
-    keywords = subject.toLowerCase().split(' ');
-  });
-  
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    //.collection('posts')
-    .collection('test')
+    .collection('feedbacks')
     .doc('$_timestampCreation$currentUser')
     .set({
       'trackURL': trackURL,
@@ -124,7 +115,7 @@ publicationRequest(
       'postID': '$_timestampCreation$currentUser',
       'subject': subject,
       'timestamp': _timestampCreation,
-      'typeOfPost': typeOfPost == 0 ? 'issue' : typeOfPost == 1 ? 'tip' : typeOfPost == 2 ? 'project' : 'feedback',
+      'typeOfPost': 'feedback',
       'keywords': FieldValue.arrayUnion(keywords),
       'savedBy': FieldValue.arrayUnion([000000]),
       'reactedBy': {
@@ -134,9 +125,6 @@ publicationRequest(
       print('Cloud firestore : publication done');
       subjectEditingController.clear();
       bodyEditingController.clear();
-      setState((){
-        publishingInProgress = false;
-      });
       Navigator.pop(context);
     });
 }
@@ -145,10 +133,11 @@ publicationRequest(
 
 //Like request
 
-likeRequest(String postID, int likes, String subject, String currentUser, String currentUsername, List<dynamic> likedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
+
+likeRequest(String typeOfPost, String postID, int likes, String subject, String currentUser, String currentUsername, List<dynamic> likedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'likes': likes+1,
@@ -180,9 +169,9 @@ likeRequest(String postID, int likes, String subject, String currentUser, String
     });
 }
 
-deletelikeRequest(String postID, int likes, String currentUser, List<dynamic> likedByList) {
+deletelikeRequest(String typeOfPost, String postID, int likes, String currentUser, List<dynamic> likedByList) {
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'likes': likes-1,
@@ -196,10 +185,10 @@ deletelikeRequest(String postID, int likes, String currentUser, List<dynamic> li
 ///
 ///
 ///
-fireRequest(String postID, int fires, String subject, String currentUser, String currentUsername, List<dynamic> firedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
+fireRequest(String typeOfPost, String postID, int fires, String subject, String currentUser, String currentUsername, List<dynamic> firedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'fires': fires+1,
@@ -231,9 +220,9 @@ fireRequest(String postID, int fires, String subject, String currentUser, String
     });
 }
 
-deleteFireRequest(String postID, int fires, String currentUser, List<dynamic> firedByList) {
+deleteFireRequest(String typeOfPost, String postID, int fires, String currentUser, List<dynamic> firedByList) {
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'fires': fires-1,
@@ -247,10 +236,10 @@ deleteFireRequest(String postID, int fires, String currentUser, List<dynamic> fi
 ///
 ///
 //Rocket request
-rocketRequest(String postID, int rockets, String subject, String currentUser, String currentUsername, List<dynamic> rocketedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
+rocketRequest(String typeOfPost, String postID, int rockets, String subject, String currentUser, String currentUsername, List<dynamic> rocketedByList, String adminUID, String adminNotificationToken, String currentProfilephoto) {
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'rockets': rockets+1,
@@ -282,9 +271,9 @@ rocketRequest(String postID, int rockets, String subject, String currentUser, St
     });
 }
 
-deleteRocketRequest(String postID, int rockets, String currentUser, List<dynamic> rocketedByList) {
+deleteRocketRequest(String typeOfPost, String postID, int rockets, String currentUser, List<dynamic> rocketedByList) {
   FirebaseFirestore.instance
-    .collection('posts')
+    .collection(typeOfPost == 'feedback'? 'feedbacks' : 'posts')
     .doc(postID)
     .update({
       'rockets': rockets-1,

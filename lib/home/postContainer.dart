@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flanger_web_version/audioPlayerPost.dart';
 import 'package:flanger_web_version/requestList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'commentContainer.dart';
+import '../commentContainer.dart';
 
 
 class PostContainer extends StatefulWidget {
@@ -213,6 +214,8 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
         ? Color(0xff62DDF9)
         : widget.listIsExpanded[widget.index] == true && widget.typeOfPost == 'project'
         ? Color(0xffBF88FF)
+        : widget.listIsExpanded[widget.index] == true && widget.typeOfPost == 'feedback'
+        ? Colors.orange
         : Colors.transparent,
       ),
     ),
@@ -233,7 +236,9 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                   ? Color(0xff62DDF9)
                   : widget.typeOfPost == 'project'
                   ? Color(0xffBF88FF)
-                  : Color(0xff62DDF9),
+                  : widget.typeOfPost == 'feedback'
+                  ? Colors.orange
+                  : Colors.transparent,
                   borderRadius: new BorderRadius.only(
                     topLeft: Radius.circular(10.0),
                     topRight: Radius.circular(10.0),
@@ -609,13 +614,12 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     ScaffoldMessenger.of(widget.homeContext).showSnackBar(postAlreadySaved);
                   } else {
                   FirebaseFirestore.instance
-                    .collection(widget.typeOfPost == 'feedback' ? 'test' : 'posts')
+                    .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                     .doc(widget.postID)
                     .update({
                       'savedBy': FieldValue.arrayUnion([widget.currentUser]),
                     }).whenComplete(() {
-                      print('No work');
-                      //ScaffoldMessenger.of(widget.homeContext).showSnackBar(postSaved);
+                      ScaffoldMessenger.of(widget.homeContext).showSnackBar(postSaved);
                     });
                   }
                   },
@@ -674,7 +678,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                                         onTap: () {
                                                         Navigator.pop(context);
                                                         FirebaseFirestore.instance
-                                                          .collection('posts')
+                                                          .collection(widget.typeOfPost == 'feedback'? 'feedbacks' : 'posts')
                                                           .doc(widget.postID)
                                                           .update({
                                                             'savedBy': FieldValue.arrayRemove([widget.currentUser]),
@@ -741,290 +745,194 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
             widget.typeOfPost == 'feedback'
             ? new Padding(
               padding: EdgeInsets.only(top: 20.0,left: 0.0, right: 0.0, bottom: 40.0),
-              child: new Container(
-                decoration: new BoxDecoration(
-                  borderRadius: new BorderRadius.circular(10.0),
-                  border: new Border.all(
-                    width: 2.0,
-                    color: widget.postContainerAudioPlayer.playerState.playing == true
-                    ? Colors.purple
-                    : Colors.transparent,
-                  ),
-                ),
-                height: 110.0,
-                               child: new Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                new Padding(
-                                  padding: EdgeInsets.only(top: 2.0),
-                                  child: new Center(
-                                    child: new Text('A specific part was put forward by ' + widget.adminUsername,
-                                    style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.normal),
-                                    ),
-                                  ),
+              child: new StatefulBuilder(
+                builder: (BuildContext context, StateSetter audioSetState){
+                  return new Container(
+    child: new Container(
+      decoration: new BoxDecoration(
+        borderRadius: new BorderRadius.circular(10.0),
+        border: new Border.all(
+          width: 2.0,
+          color: widget.postContainerAudioPlayer.playerState.playing == true
+          ? Colors.purple
+          : Colors.transparent,
+        ),
+      ),
+      height: 110.0,
+                     child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                      new Padding(
+                        padding: EdgeInsets.only(top: 2.0),
+                        child: new Center(
+                          child: new Text('A specific part was put forward by ' + widget.adminUsername,
+                          style: new TextStyle(color: Colors.grey[600], fontSize: 12.0, fontWeight: FontWeight.normal),
+                          ),
+                        ),
+                      ),
+                      new Padding(
+                        padding: EdgeInsets.only(top: 10.0, left: 30.0, right: 30.0),
+                        child: new Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            new Padding(
+                              padding: EdgeInsets.only(bottom: 10.0),
+                            child: new IconButton(
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              icon: new Icon(
+                              widget.postContainerAudioPlayer.playerState.playing == true 
+                             ? CupertinoIcons.pause_circle_fill
+                             : CupertinoIcons.play_circle_fill,
+                              size: 40.0,
+                              color: Colors.white,
+                              ), 
+                              onPressed: () async {
+                                if(widget.postContainerAudioPlayer.playerState.playing == false && widget.postContainerDurationTrack == null ) {
+                                  print('AudioPlayer : launch new track');
+                                  await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
+                                    widget.postContainerAudioPlayer.durationStream.listen((event) {
+                                      audioSetState(() {
+                                        widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
+                                      });
+                                      widget.postContainerAudioPlayer.positionStream.listen((event) {
+                                        audioSetState(() {
+                                          widget.postContainerCurrentPositionTrack = event;
+                                        });
+                                        print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
+                                        print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
+                                        if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
+                                          print('AudioPlayer: Extract finished');
+                                          widget.postContainerAudioPlayer.pause();
+                                          }
+                                      });
+                                      widget.postContainerAudioPlayer.play();
+                                    });
+                                  });
+                                }  else if(widget.postContainerAudioPlayer.playerState.playing == false
+                                  && ((widget.postContainerTrackDragStart > widget.postContainerCurrentPositionTrack.inMilliseconds) || (widget.postContainerTrackDragStart < widget.postContainerCurrentPositionTrack.inMilliseconds))) {
+                                  widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
+                                    print('AudioPlayer : play after seek');
+                                    widget.postContainerAudioPlayer.play();
+                                  });
+                              
+                                } else if(//_trackURLPlaying == widget.trackURL
+                                 widget.postContainerAudioPlayer.playerState.playing == true) {
+                                  print('AudioPlayer : Pause');
+                                  widget.postContainerAudioPlayer.pause();
+                                }
+                              },
+                            ),
+                            ),
+                            new Padding(
+                              padding: EdgeInsets.only(left: 20.0),
+                              child: new Container(
+                                height: 50.0,
+                                width: 450.0,
+                                decoration: new BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: new BorderRadius.circular(40.0)
                                 ),
-                                new Padding(
-                                  padding: EdgeInsets.only(top: 10.0, left: 30.0, right: 30.0),
-                                  child: new Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      new Padding(
-                                        padding: EdgeInsets.only(bottom: 10.0),
-                                      child: new IconButton(
-                                        splashColor: Colors.transparent,
-                                        highlightColor: Colors.transparent,
-                                        focusColor: Colors.transparent,
-                                        icon: new Icon(
-                                        widget.postContainerAudioPlayer.playerState.playing == true 
-                                       ? CupertinoIcons.pause_circle_fill
-                                       : CupertinoIcons.play_circle_fill,
-                                        size: 40.0,
-                                        color: Colors.white,
-                                        ), 
-                                        onPressed: () async {
-                                        if(_trackURLPlaying != widget.trackURL) {
-                                          if(_trackURLPlaying != '') {
-                                                   widget.postContainerAudioPlayer.stop().whenComplete(() async {
-                                                  setState(() {
-                                                    _trackURLPlaying = widget.trackURL;
-                                                  });
-                                                  await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
-                                                    widget.postContainerAudioPlayer.durationStream.listen((event) {
-                                                      setState(() {
-                                                        widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
-                                                      });
-                                                      widget.postContainerAudioPlayer.positionStream.listen((event) {
-                                                        setState(() {
-                                                          widget.postContainerCurrentPositionTrack = event;
-                                                        });
-                                                        //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
-                                                      // print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds.toInt()).toString());
-                                                        if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
-                                                          print('AudioPlayer: Extract finished');
-                                                          widget.postContainerAudioPlayer.pause();
-                                                          }
-                                                      });
-                                                      widget.postContainerAudioPlayer.play();
-                                                    });
-                                                  });
-                                                  });
-                                                
-                                       
-                                          } else {
-                                            //_trackURLPlaying == ''
-                                            print('AudioPlayer : Play cause no track played yet');
-                                            setState(() {
-                                              _trackURLPlaying = widget.trackURL;
-                                              _trackIsPlayingIndex = widget.index;
-                                            });
-                                            await widget.postContainerAudioPlayer.setUrl(widget.trackURL).whenComplete(() async {
-                                              widget.postContainerAudioPlayer.durationStream.listen((event) {
-                                                setState(() {
-                                                  widget.postContainerDurationTrack = widget.postContainerAudioPlayer.duration;
-                                                });
-                                                widget.postContainerAudioPlayer.positionStream.listen((event) {
-                                                  setState(() {
-                                                    widget.postContainerCurrentPositionTrack = event;
-                                                  });
-                                                  print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
-                                                  print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack.inMilliseconds.toInt()).toString());
-                                                  if(widget.postContainerCurrentPositionTrack >= Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt())) {
-                                                    print('AudioPlayer: Extract finished');
-                                                    widget.postContainerAudioPlayer.pause();
-                                                    }
-                                                });
-                                                widget.postContainerAudioPlayer.play();
-                                              });
-                                            });
-                                          }
-                                          
-                                        } else if(_trackURLPlaying == widget.trackURL
-                                            && widget.postContainerAudioPlayer.playerState.playing == false
-                                            && ((widget.postContainerTrackDragStart > widget.postContainerCurrentPositionTrack.inMilliseconds) || (widget.postContainerTrackDragStart < widget.postContainerCurrentPositionTrack.inMilliseconds))) {
-                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
-                                              print('AudioPlayer : play after seek');
-                                              widget.postContainerAudioPlayer.play();
-                                            });
-                                        
-                                          } else if(_trackURLPlaying == widget.trackURL
-                                          && widget.postContainerAudioPlayer.playerState.playing == true) {
-                                            print('AudioPlayer : Pause');
+                                child: new Stack(
+                                  children: [
+                                      new SliderTheme(
+                                        data: Theme.of(context).sliderTheme.copyWith(
+                                          trackHeight: 20.0,
+                                          disabledThumbColor: Colors.transparent,
+                                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                          thumbColor: Colors.grey[900],
+                                          //disabledThumbColor: Colors.transparent,
+                                          //trackShape: RoundedRectSliderTrackShape(),
+                                          //inactiveTrackColor: Colors.grey[900],
+                                          inactiveTrackColor: Colors.grey[900],
+                                          activeTrackColor: Color(0xffBF88FF),
+                                         // disabledInactiveTickMarkColor: Colors.transparent,
+                                          //activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                          //inactiveTickMarkColor: Colors.grey[600],
+                                         // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                        ),
+                                      child: ExcludeSemantics(
+                                      child: new RangeSlider(
+                                        labels: RangeLabels('',''),
+                                        min: 0.0,
+                                        max: widget.postContainerDurationTrack != null ? widget.postContainerDurationTrack.inMilliseconds.toDouble() : widget.trackDuration,
+                                        values: new RangeValues(widget.postContainerTrackStartParticular.toDouble(), widget.postContainerTrackEndParticular.toDouble()),
+                                        onChangeStart: (value) {},
+                                        onChanged: (value) {},
+                                        divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
+                                        ),
+                                      )),
+                                      new SliderTheme(
+                                        data: Theme.of(context).sliderTheme.copyWith(
+                                          trackHeight: 20.0,
+                                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
+                                          thumbColor: Colors.deepPurpleAccent,
+                                          //disabledThumbColor: Colors.transparent,
+                                          //trackShape: RoundedRectSliderTrackShape(),
+                                          inactiveTrackColor: Colors.transparent,
+                                          activeTrackColor: Colors.deepPurple.withOpacity(0.2),
+                                         // disabledInactiveTickMarkColor: Colors.transparent,
+                                          activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
+                                          inactiveTickMarkColor: Colors.grey[600],
+                                         // tickMarkShape: SliderTickMarkShape.noTickMark,
+                                        ),
+                                      child: new Slider(
+                                        label: new Duration(milliseconds: (widget.postContainerTrackDragStart).toInt()).toString().split('.')[0],
+                                        min: 0.0,
+                                        max: widget.postContainerDurationTrack != null ? widget.postContainerDurationTrack.inMilliseconds.toDouble() : widget.trackDuration,
+                                        value: widget.postContainerAudioPlayer.playerState.playing == true ? widget.postContainerCurrentPositionTrack.inMilliseconds.toDouble() : widget.postContainerTrackDragStart,
+                                        onChangeStart: (value) {
+                                          if(widget.postContainerAudioPlayer.playerState.playing == true) {
                                             widget.postContainerAudioPlayer.pause();
                                           }
-
-                                          /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
-                                            widget.postContainerAudioPlayer.pause();
-                                          } else {
-                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
-                                              print('AudioPlayer: Start is seeked');
-                                            widget.postContainerAudioPlayer.play();
-                                            });
-                                          }*/
-                                        
-                                        /*else if(_trackURLPlaying == widget.trackURL && widget.postContainerAudioPlayer[widget.index].playerState.playing == false) {
-                                            print('AudioPlayer: Reprendre');
-                                            widget.postContainerAudioPlayer[widget.index].play();
-                                        }*/
-
-                                        
-
-                                      /*   if(_trackURLPlaying != widget.trackURL) {
-                                            setState(() {
-                                              _trackURLPlaying = widget.trackURL;
-                                            });
-                                          ////////////////////
-                                          await widget.postContainerAudioPlayer[widget.index].setUrl(widget.trackURL).whenComplete(() async {
-                                            widget.postContainerAudioPlayer[widget.index].durationStream.listen((event) {
-                                              setState(() {
-                                                widget.postContainerDurationTrack[widget.index] = widget.postContainerAudioPlayer[widget.index].duration;
-                                              });
-                                              widget.postContainerAudioPlayer[widget.index].positionStream.listen((event) {
-                                                setState(() {
-                                                  widget.postContainerCurrentPositionTrack[widget.index] = event;
-                                                });
-                                                //print('Track duration = ' + Duration(milliseconds: widget.postContainerDurationTrack.inMilliseconds.toInt()).toString());
-                                               // print('widget.postContainerCurrentPositionTrack = ' + Duration(milliseconds: widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds.toInt()).toString());
-                                                 if(widget.postContainerCurrentPositionTrack[widget.index] >= Duration(milliseconds: widget.postContainerDurationTrack[widget.index].inMilliseconds.toInt())) {
-                                                   print('AudioPlayer: Extract finished');
-                                                   widget.postContainerAudioPlayer[widget.index].pause();
-                                                  }
-                                              });
-                                              widget.postContainerAudioPlayer[widget.index].play();
-                                            });
-                                          });
-
-                                          } else if(_trackURLPlaying == widget.trackURL
-                                            && widget.postContainerAudioPlayer[widget.index].playerState.playing == false
-                                            && ((widget.postContainerTrackDragStart[widget.index] > widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds) || (widget.postContainerTrackDragStart[widget.index] < widget.postContainerCurrentPositionTrack[widget.index].inMilliseconds))) {
-                                            widget.postContainerAudioPlayer[widget.index].seek(Duration(milliseconds: widget.postContainerTrackDragStart[widget.index].toInt())).whenComplete(() {
-                                              print('AudioPlayer : play after seek');
-                                              widget.postContainerAudioPlayer[widget.index].play();
-                                            });
-                                        
-                                          } else if(_trackURLPlaying == widget.trackURL
-                                          && widget.postContainerAudioPlayer[widget.index].playerState.playing == true) {
-                                            print('AudioPlayer : Pause');
-                                            widget.postContainerAudioPlayer[widget.index].pause();
-                                          }*/
-
-                                          /*if(widget.postContainerAudioPlayer.playerState.playing == true) {
-                                            widget.postContainerAudioPlayer.pause();
-                                          } else {
-                                            widget.postContainerAudioPlayer.seek(Duration(milliseconds: widget.postContainerTrackDragStart.toInt())).whenComplete(() {
-                                              print('AudioPlayer: Start is seeked');
-                                            widget.postContainerAudioPlayer.play();
-                                            });
-                                          }*/
-                                          
                                         },
+                                        onChanged: (value) {
+                                          audioSetState((){
+                                            widget.postContainerTrackDragStart = value;
+                                          });
+                                        },
+                                        divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
+                                        ),
                                       ),
-                                      ),
-                                      new Padding(
-                                        padding: EdgeInsets.only(left: 20.0),
-                                        child: new Container(
-                                          height: 50.0,
-                                          width: 450.0,
-                                          decoration: new BoxDecoration(
-                                            color: Colors.transparent,
-                                            borderRadius: new BorderRadius.circular(40.0)
-                                          ),
-                                          child: new Stack(
-                                            children: [
-                                                new SliderTheme(
-                                                  data: Theme.of(context).sliderTheme.copyWith(
-                                                    trackHeight: 20.0,
-                                                    disabledThumbColor: Colors.transparent,
-                                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
-                                                    thumbColor: Colors.grey[900],
-                                                    //disabledThumbColor: Colors.transparent,
-                                                    //trackShape: RoundedRectSliderTrackShape(),
-                                                    //inactiveTrackColor: Colors.grey[900],
-                                                    inactiveTrackColor: Colors.grey[900],
-                                                    activeTrackColor: Color(0xffBF88FF),
-                                                   // disabledInactiveTickMarkColor: Colors.transparent,
-                                                    //activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
-                                                    //inactiveTickMarkColor: Colors.grey[600],
-                                                   // tickMarkShape: SliderTickMarkShape.noTickMark,
-                                                  ),
-                                                child: ExcludeSemantics(
-                                                child: new RangeSlider(
-                                                  labels: RangeLabels('',''),
-                                                  min: 0.0,
-                                                  max: 222693,
-                                                  values: new RangeValues(widget.postContainerTrackStartParticular.toDouble(), widget.postContainerTrackEndParticular.toDouble()),
-                                                  onChangeStart: (value) {},
-                                                  onChanged: (value) {},
-                                                  divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
-                                                  ),
-                                                )),
-                                                new SliderTheme(
-                                                  data: Theme.of(context).sliderTheme.copyWith(
-                                                    trackHeight: 20.0,
-                                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20.0), 
-                                                    thumbColor: Colors.deepPurpleAccent,
-                                                    //disabledThumbColor: Colors.transparent,
-                                                    //trackShape: RoundedRectSliderTrackShape(),
-                                                    inactiveTrackColor: Colors.transparent,
-                                                    activeTrackColor: Colors.deepPurple.withOpacity(0.2),
-                                                   // disabledInactiveTickMarkColor: Colors.transparent,
-                                                    activeTickMarkColor: Colors.deepPurpleAccent.withOpacity(0.6),
-                                                    inactiveTickMarkColor: Colors.grey[600],
-                                                   // tickMarkShape: SliderTickMarkShape.noTickMark,
-                                                  ),
-                                                child: new Slider(
-                                                  label: new Duration(milliseconds: (widget.postContainerTrackDragStart).toInt()).toString().split('.')[0],
-                                                  min: 0.0,
-                                                  max: widget.postContainerDurationTrack != null ? widget.postContainerDurationTrack.inMilliseconds.toDouble() : 120000,
-                                                  value: widget.postContainerAudioPlayer.playerState.playing == true ? widget.postContainerCurrentPositionTrack.inMilliseconds.toDouble() : widget.postContainerTrackDragStart,
-                                                  onChangeStart: (value) {
-                                                    if(widget.postContainerAudioPlayer.playerState.playing == true) {
-                                                      widget.postContainerAudioPlayer.pause();
-                                                    }
-                                                  },
-                                                  onChanged: (value) {
-                                                    setState((){
-                                                      widget.postContainerTrackDragStart = value;
-                                                    });
-                                                  },
-                                                  divisions: widget.postContainerAudioPlayer.playerState.playing == true ? null : widget.postContainerTrackDivisions,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                        ),
-                                    ],
-                                  ),
-                                  ),
-                                  new Padding(
-                                    padding: EdgeInsets.only(top: 10.0),
-                                    child: new Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        new Text('Duration :',
-                                        style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.bold),
-                                        ),
-                                        new Padding(
-                                          padding: EdgeInsets.only(left: 5.0),
-                                          child: new Text(
-                                          widget.postContainerDurationTrack != null && widget. postContainerCurrentPositionTrack != null
-                                          ? 
-                                          (widget.postContainerAudioPlayer.playerState.playing == true
-                                          ? Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerCurrentPositionTrack.inMilliseconds).toInt()).toString().split('.')[0]
-                                          : Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerTrackDragStart).toInt()).toString().split('.')[0]
-                                          )
-                                          : Duration(milliseconds: (widget.trackDuration).toInt()).toString().split('.')[0],
-                                          style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.normal),
-                                        
-                                         //_dragValueEndFeedback.toInt().round()).toString().split('.')[0]
-                                        ),
-                                          ),
-                                      ],
-                                    )
-                                    ),
                                   ],
                                 ),
-              ),
+                              ),
+                              ),
+                          ],
+                        ),
+                        ),
+                        new Padding(
+                          padding: EdgeInsets.only(top: 10.0),
+                          child: new Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              new Text('Duration :',
+                              style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.bold),
+                              ),
+                              new Padding(
+                                padding: EdgeInsets.only(left: 5.0),
+                                child: new Text(
+                                widget.postContainerDurationTrack != null && widget. postContainerCurrentPositionTrack != null
+                                ? 
+                                (widget.postContainerAudioPlayer.playerState.playing == true
+                                ? Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerCurrentPositionTrack.inMilliseconds).toInt()).toString().split('.')[0]
+                                : Duration(milliseconds: (widget.postContainerDurationTrack.inMilliseconds-widget.postContainerTrackDragStart).toInt()).toString().split('.')[0]
+                                )
+                                : Duration(milliseconds: (widget.trackDuration).toInt()).toString().split('.')[0],
+                                style: new TextStyle(color: Colors.grey[600], fontSize: 14.0, fontWeight: FontWeight.normal),
+                              
+                               //_dragValueEndFeedback.toInt().round()).toString().split('.')[0]
+                              ),
+                                ),
+                            ],
+                          )
+                          ),
+                        ],
+                      ),
+                      ),
+                  );
+                })
             )
             : new Container(),
             new Padding(
@@ -1044,12 +952,14 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     onTap: () {
                       if(widget.likedBy.contains(widget.currentUser)) {
                       deletelikeRequest(
+                        widget.typeOfPost,
                         widget.postID, 
                         widget.likes, 
                         widget.currentUser, 
                         widget.likedBy);
                       } else {
                       likeRequest(
+                      widget.typeOfPost,
                       widget.postID, 
                       widget.likes,
                       widget.subject, 
@@ -1088,12 +998,14 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     onTap: () {
                       if(widget.firedBy.contains(widget.currentUser)) {
                         deleteFireRequest(
+                          widget.typeOfPost,
                           widget.postID, 
                           widget.fires, 
                           widget.currentUser, 
                           widget.firedBy);
                       } else {
                         fireRequest(
+                          widget.typeOfPost,
                           widget.postID, 
                           widget.fires, 
                           widget.subject, 
@@ -1132,12 +1044,14 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                     onTap: () {
                       if(widget.rocketedBy.contains(widget.currentUser)) {
                         deleteRocketRequest(
+                          widget.typeOfPost,
                           widget.postID, 
                           widget.rockets, 
                           widget.currentUser, 
                           widget.rocketedBy);
                       } else {
                         rocketRequest(
+                          widget.typeOfPost,
                           widget.postID, 
                           widget.rockets, 
                           widget.subject, 
@@ -1543,7 +1457,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                             widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
                             int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
                             FirebaseFirestore.instance
-                              .collection('test')
+                              .collection('feedbacks')
                               .doc(widget.postID)
                               .collection('comments')
                               .doc('$_timestampCreation${widget.currentUserUsername}')
@@ -1565,7 +1479,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                  _uploadInProgress = false;
                                  });
                                 FirebaseFirestore.instance
-                                  .collection('test')
+                                  .collection('feedbacks')
                                   .doc(widget.postID)
                                   .update({
                                     'comments': FieldValue.increment(1),
@@ -1593,6 +1507,9 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                           'title': widget.subject,
                                         }).whenComplete(() {
                                           print('Cloud Firestore : notifications updated for $key');
+                                          setState(() {
+                                            widget.listfeedbackCategories[widget.index] = [];
+                                          });
                                           widget.listFocusNodeController[widget.index].unfocus();
                                         });
                                       }
@@ -1602,8 +1519,8 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           } else {
                             print('Choose a category');
                           }
-                        } else if(((widget.typeOfPost == 'issue') || (widget.typeOfPost == 'tip') || (widget.typeOfPost == 'project') ) && widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
-                           /* setState(() {
+                        } else if(((widget.typeOfPost == 'issue') || (widget.typeOfPost == 'tip') || (widget.typeOfPost == 'project')) && widget.listTextEditingController[widget.index].text.length > 1 && widget.listTextEditingController[widget.index].value.text != '  ') {
+                            setState(() {
                               _uploadInProgress = true;
                             });
                             widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
@@ -1662,7 +1579,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                       }
                                     });
                                   });
-                              });*/
+                              });
                             }
                       },
                     ),

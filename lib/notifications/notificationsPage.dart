@@ -290,7 +290,7 @@ class NotificationsPageState extends State<NotificationsPage> with AutomaticKeep
                                               setState(() {
                                                 _postIDSelected = ds['postID'];
                                                 listTileSelected = index;
-                                                _fetchPostsDatas = fetchPostsDatas(ds['postID'], ds['title'] == 'Feedback section' ? 'test' : 'posts');
+                                                _fetchPostsDatas = fetchPostsDatas(ds['postID'], ds['body'] == 'has commented this feedback request 🎹 : '? 'feedbacks' : 'posts');
                                                 print('_postIDSelected = $_postIDSelected');
                                                 if(ds['alreadySeen'] == false) {
                                                   FirebaseFirestore.instance

@@ -1,19 +1,23 @@
 import 'package:badges/badges.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flanger_web_version/home.dart';
+import 'package:flanger_web_version/home/homeAllposts.dart';
+import 'package:flanger_web_version/home/homeMenu.dart';
 import 'package:flanger_web_version/profile/profile.dart';
-import 'package:flanger_web_version/savedPost/savedPost.dart';
+import 'package:flanger_web_version/savedPost/savedAllposts.dart';
+import 'package:flanger_web_version/savedPost/savedMenu.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'home.dart';
-import 'home.dart';
+import 'home/homeAllposts.dart';
+import 'home/homeAllposts.dart';
+import 'home/homeAllposts.dart';
+import 'home/homeMenu.dart';
 import 'inscription/landingPage.dart';
 import 'inscription/landingPage.dart';
 import 'notifications/notificationsPage.dart';
 import 'profile/profile.dart';
-import 'savedPost/savedPost.dart';
+import 'savedPost/savedAllposts.dart';
 
 
 class MainViewPage extends StatefulWidget {
@@ -274,14 +278,6 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
                          ]
                ),
              ),
-               /*child: new Container(
-                 height: 35.0,
-                 width: 35.0,
-                 decoration: new BoxDecoration(
-                   color: Colors.grey[900],
-                   shape: BoxShape.circle,
-                 ),
-                 ),*/
                ),
              ],
              title: new Padding(
@@ -315,7 +311,7 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
              physics: new NeverScrollableScrollPhysics(),
              controller: _controller,
              children: [
-               new HomePage(
+               new HomeMenu(
                  currentUser: widget.currentUser,
                  currentUserPhoto: snapshot.data['profilePhoto'],
                  currentUserUsername: snapshot.data['username'],
@@ -343,7 +339,7 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
                  currentMixcloud: snapshot.data['mixcloud'],
                  currentNotificationsToken: snapshot.data['notificationsToken'],
                ),
-               new SavedPostPage(
+               new SavedMenu(
                  currentUser: widget.currentUser,
                  currentUserPhoto: snapshot.data['profilePhoto'],
                  currentUserUsername: snapshot.data['username'],
