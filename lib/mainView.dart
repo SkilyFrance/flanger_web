@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:badges/badges.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -159,8 +161,11 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
          debugShowCheckedModeBanner: false,
          home: new Scaffold(
            appBar: new AppBar(
-             backgroundColor: Colors.black,
-             bottom: new TabBar(
+             elevation: 10.0,
+             backgroundColor: Color(0xff121212),
+             bottom: new PreferredSize(
+               preferredSize: new Size(0.0, 0.0),
+               child: new TabBar(
                unselectedLabelColor: Colors.grey[800],
                indicatorSize: TabBarIndicatorSize.label,
                indicatorColor: Colors.deepPurpleAccent,
@@ -173,7 +178,8 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
                  Tab(icon: new Icon(CupertinoIcons.person)),
                ]
              ),
-             actions: [
+             ),
+            /* actions: [
                new Padding(
                padding: EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 10.0),
                child: new Material(
@@ -279,8 +285,8 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
                ),
              ),
                ),
-             ],
-             title: new Padding(
+             ],*/
+            /* title: new Padding(
                padding: EdgeInsets.only(left: 0.0),
                child: new Row(
                  mainAxisAlignment: MainAxisAlignment.start,
@@ -306,7 +312,8 @@ class MainViewPageState extends State<MainViewPage> with SingleTickerProviderSta
            ),
                  ],
                ),
-               )),
+               )*/
+               ),
            body: new TabBarView(
              physics: new NeverScrollableScrollPhysics(),
              controller: _controller,

@@ -50,7 +50,7 @@ class SubjectEditingControllerState extends State<SubjectEditingController> {
     child: new Container(
       height: 50.0,
       decoration: new BoxDecoration(
-        color: Colors.grey[900],
+        color: Colors.grey[800],
         borderRadius: new BorderRadius.circular(10.0),
       ),
       child: new TextField(

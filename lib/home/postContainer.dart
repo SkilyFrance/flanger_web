@@ -42,7 +42,8 @@ class PostContainer extends StatefulWidget {
   String body;
   String trackURL;
   double trackDuration;
-
+  bool withImage;
+  String imageURL;
   //likes
   int likes;
   List<dynamic> likedBy;
@@ -104,6 +105,8 @@ class PostContainer extends StatefulWidget {
     this.body,
     this.trackURL,
     this.trackDuration,
+    this.withImage,
+    this.imageURL,
     this.likes,
     this.likedBy,
     this.fires,
@@ -324,7 +327,7 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                                         style: new TextStyle(color: Colors.white, fontSize: 13.0, fontWeight: FontWeight.normal,
                                         wordSpacing: 1.0,
                                         letterSpacing: 1.0,
-                                        height: 1.0,
+                                        height: 1.5,
                                         ),
                                         ),
                                         ),
@@ -739,8 +742,79 @@ class PostContainerState extends State<PostContainer> with AutomaticKeepAliveCli
                           ), value: '1'),]
                 ),
               )
-    
             ),
+            widget.withImage == true
+            ? new Padding(
+              padding: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0, bottom: 20.0),
+              child: new InkWell(
+                onTap: () {
+        showDialog(
+          barrierDismissible: true,
+              context: context,
+              builder: (context) {
+                return new AlertDialog(
+                  backgroundColor: Colors.transparent,
+                  content: new Container(
+                    //height: MediaQuery.of(context).size.height*0.80,
+                    //width: MediaQuery.of(context).size.width*0.80,
+                    decoration: new BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: new BorderRadius.circular(5.0),
+                    ),
+                    child: new ClipRRect(
+                      borderRadius: new BorderRadius.circular(5.0),
+                      // child: new AspectRatio(
+                      // aspectRatio: Image.network(widget.imageURL).width
+                      child: 
+                      widget.imageURL != null
+                      ? Image.network(
+                          widget.imageURL,
+                        fit: BoxFit.cover,
+                      )
+                      : new Container(
+                        height: MediaQuery.of(context).size.height*0.80,
+                        width: MediaQuery.of(context).size.width*0.80,
+                        decoration: new BoxDecoration(
+                          color: Colors.grey[900],
+                          borderRadius: new BorderRadius.circular(5.0),
+                        ),
+                      child: new Center(
+                        child: new Text('Image not available.',
+                        style: new TextStyle(color: Colors.grey, fontSize: 16.0, fontWeight: FontWeight.normal)
+                        ),
+                      ),
+                     // )
+                    ),
+                    ),
+                  ),
+                );
+                });
+                },
+              child: new Container(
+                decoration: new BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: new BorderRadius.circular(5.0)
+                ),
+              child: new ClipRRect(
+                borderRadius: new BorderRadius.circular(5.0),
+              child: new AspectRatio(
+                 aspectRatio: 16 / 9,
+                 child: widget.imageURL != null
+                 ? Image.network(
+                    widget.imageURL,
+                   fit: BoxFit.cover,
+                 )
+                 : new Center(
+                   child: new Text('Image not available.',
+                   style: new TextStyle(color: Colors.grey, fontSize: 16.0, fontWeight: FontWeight.normal)
+                   ),
+                 )
+               ),
+              ),
+              ),
+              ),
+              )
+            : new Container(),
             // IF FEEDBACK CONTAINER
             widget.typeOfPost == 'feedback'
             ? new Padding(

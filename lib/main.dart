@@ -20,7 +20,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flanger',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        scrollbarTheme: new ScrollbarThemeData(
+          trackColor: MaterialStateProperty.all(Colors.grey),
+          thumbColor: MaterialStateProperty.all(Colors.grey),
+        ),
       ),
       home: new FutureBuilder(
       future: _init,
@@ -47,7 +50,7 @@ class MyApp extends StatelessWidget {
            animating: true,
          ),
          );
-      }
+        }
       ),
     );
   }

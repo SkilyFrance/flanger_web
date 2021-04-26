@@ -19,7 +19,7 @@ class LandinPageState extends State<LandinPage> {
   }
 
 
-  int lastUpdate = 1618841639718000;
+  int lastUpdate = 1619099608184000;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,7 @@ class LandinPageState extends State<LandinPage> {
             child: new Center(
               child: new RichText(
                 text: new TextSpan(
-                  text: 'Pre-released :  ',
+                  text: 'Last update :  ',
                   style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.normal),
                   children: [
                     new TextSpan(
@@ -172,11 +172,11 @@ class LandinPageState extends State<LandinPage> {
       height: MediaQuery.of(context).size.height*0.40,
       width: MediaQuery.of(context).size.width*0.40,
       decoration: new BoxDecoration(
-        color: Colors.transparent,
-        border: new Border.all(
+        color: Colors.deepPurpleAccent[400],
+       /* border: new Border.all(
           width: 1.0,
           color: Colors.grey
-        ),
+        ),*/
         borderRadius: new BorderRadius.circular(50.0),
       ),
       child: new Center(

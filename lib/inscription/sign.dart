@@ -148,9 +148,10 @@ class SignPageState extends State<SignPage> {
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
-      onTap: () {
+      onTap: () async {
       if(_emailTextController.value.text.length > 4 && _passwordTextController.value.text.length > 3) {
-       FirebaseAuth.instance
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL).then((value) {
+       return FirebaseAuth.instance
          .createUserWithEmailAndPassword(email: _emailTextController.value.text, password: _passwordTextController.value.text).then((authResult) {
            print('authResult = $authResult');
          //Go to creationProcess
@@ -168,6 +169,7 @@ class SignPageState extends State<SignPage> {
              });
            }
          });
+        });
       } else {
         print('Enter datas');
       }
@@ -182,12 +184,12 @@ class SignPageState extends State<SignPage> {
       height: MediaQuery.of(context).size.height*0.40,
       width: MediaQuery.of(context).size.width*0.40,
       decoration: new BoxDecoration(
-        color: Colors.transparent,
+        color: Colors.deepPurpleAccent[400],
         borderRadius: new BorderRadius.circular(50.0),
-        border: new Border.all(
+        /*border: new Border.all(
           color: Colors.purpleAccent,
           width: 1.0,
-        ),
+        ),*/
       ),
       child: new Center(
         child: new Text('SIGN UP',

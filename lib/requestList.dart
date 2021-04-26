@@ -1,7 +1,100 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-publicationRequestForPost(
+
+  requestPost(
+  String collectionPost,
+  bool withImage,
+  String imageURL,
+  String currentUser,
+  String currentUserUsername,
+  String currentUserPhoto,
+  String currentNotificationsToken,
+  String body, 
+  String subject, 
+  StateSetter setState, 
+  bool publishingInProgress, 
+  BuildContext context, 
+  TextEditingController subjectEditingController, 
+  TextEditingController bodyEditingController,
+  ) {
+  List<String> keywords;
+  setState((){
+    publishingInProgress = true;
+    keywords = subject.toLowerCase().split(' ');
+
+  int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+  FirebaseFirestore.instance
+    .collection('$collectionPost')
+    .doc('$_timestampCreation$currentUser')
+    .set({
+      'withImage': withImage,
+      'imageURL': imageURL,
+      'adminNotificationsToken': currentNotificationsToken,
+      'adminProfilephoto': currentUserPhoto,
+      'adminUID': currentUser,
+      'adminUsername': currentUserUsername,
+      'body': body,
+      'commentedBy': FieldValue.arrayUnion(['000000']),
+      'comments': 0,
+      'likedBy': FieldValue.arrayUnion(['000000']),
+      'likes': 0,
+      //
+      'postID': '$_timestampCreation$currentUser',
+      'subject': subject,
+      'timestamp': _timestampCreation,
+      'keywords': FieldValue.arrayUnion(keywords),
+      'savedBy': FieldValue.arrayUnion([000000]),
+      'reactedBy': {
+        '$currentUser': currentNotificationsToken,
+      }
+    }).whenComplete(() {
+      print('Cloud firestore : $collectionPost uploaded');
+      subjectEditingController.clear();
+      bodyEditingController.clear();
+      setState((){
+        publishingInProgress = false;
+      });
+      Navigator.pop(context);
+    });
+  });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+publicationPostWithOrWithoutPhoto(
+  bool withImage,
+  String imageURL,
   String currentUser,
   String currentUserUsername,
   String currentUserPhoto,
@@ -28,6 +121,8 @@ publicationRequestForPost(
     .collection('posts')
     .doc('$_timestampCreation$currentUser')
     .set({
+      'withImage': withImage,
+      'imageURL': imageURL,
       'adminNotificationsToken': currentNotificationsToken,
       'adminProfilephoto': currentUserPhoto,
       'adminSoundCloud': currentSoundCloud,
@@ -65,6 +160,73 @@ publicationRequestForPost(
     });
 }
 
+
+
+
+/*publicationRequestForPost(
+  String currentUser,
+  String currentUserUsername,
+  String currentUserPhoto,
+  String currentNotificationsToken,
+  String currentSoundCloud,
+  String body, 
+  String subject, 
+  StateSetter setState, 
+  bool publishingInProgress, 
+  BuildContext context, 
+  TextEditingController subjectEditingController, 
+  TextEditingController bodyEditingController, 
+  int typeOfPost) {
+
+
+  List<String> keywords;
+  setState((){
+    publishingInProgress = true;
+    keywords = subject.toLowerCase().split(' ');
+  });
+  
+  int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+  FirebaseFirestore.instance
+    .collection('test')
+    .doc('$_timestampCreation$currentUser')
+    .set({
+      'adminNotificationsToken': currentNotificationsToken,
+      'adminProfilephoto': currentUserPhoto,
+      'adminSoundCloud': currentSoundCloud,
+      'adminUID': currentUser,
+      'adminUsername': currentUserUsername,
+      'body': body,
+      'fires': 0,
+      'firedBy': FieldValue.arrayUnion(['000000']),
+      'rockets': 0,
+      'rocketedBy': FieldValue.arrayUnion(['000000']),
+      'commentedBy': FieldValue.arrayUnion(['000000']),
+      'comments': 0,
+      'dislikedBy': FieldValue.arrayUnion(['000000']),
+      'dislikes': 0,
+      'likedBy': FieldValue.arrayUnion(['000000']),
+      'likes': 0,
+      //
+      'postID': '$_timestampCreation$currentUser',
+      'subject': subject,
+      'timestamp': _timestampCreation,
+      'typeOfPost': typeOfPost == 0 ? 'issue' : typeOfPost == 1 ? 'tip' : 'project',
+      'keywords': FieldValue.arrayUnion(keywords),
+      'savedBy': FieldValue.arrayUnion([000000]),
+      'reactedBy': {
+        '$currentUser': currentNotificationsToken,
+      }
+    }).whenComplete(() {
+      print('Cloud firestore : publication done');
+      subjectEditingController.clear();
+      bodyEditingController.clear();
+      setState((){
+        publishingInProgress = false;
+      });
+      Navigator.pop(context);
+    });
+}*/
+
   publicationRequestForFeedback(
   String trackURL,
   double trackDuration,
@@ -84,7 +246,8 @@ publicationRequestForPost(
   TextEditingController subjectEditingController, 
   TextEditingController bodyEditingController, 
   int typeOfPost) {
-  List<String> keywords;
+
+  List<String> keywords = ['feedback', 'section'];
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   FirebaseFirestore.instance
     .collection('feedbacks')

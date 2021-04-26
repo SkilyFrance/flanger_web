@@ -78,17 +78,16 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
 
 
   //PostEditing controller
-  TextEditingController _subjectEditingController = new TextEditingController();
+  /*TextEditingController _subjectEditingController = new TextEditingController();
   FocusNode _subjectEditingFocusNode = new FocusNode();
   TextEditingController _bodyEditingController = new TextEditingController();
   FocusNode _bodyEditingFocusNode = new FocusNode();
   int categoryPosted = 0;
   bool _lackOfSubjectOrBody = false;
-  bool publishingInProgress = false;
-  bool _searchingInProgress = false;
+  bool publishingInProgress = false;*/
 
   // VARIABLES FOR POST A TRACK FOR FEEDBACK //
-  AudioPlayer _feedbackAudioPlayer = new AudioPlayer();
+  /*AudioPlayer _feedbackAudioPlayer = new AudioPlayer();
   bool _musicIsUploaded = false;
   bool _musicUploadedInProgress = false;
   File _musicUploaded;
@@ -98,7 +97,7 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
   Duration currentBufferingFeedbackPlayer;//= = Duration(milliseconds: 10);
   double _dragValueStartFeedback = 0;
   double _dragValueEndFeedback; //222693;
-  int _trackSplitFeedback = 6;
+  int _trackSplitFeedback = 6;*/
   ///////////////////////////////////////
   
   // VARIABLES FOR PLAY A TRACK ON POST CONTAINER //
@@ -109,7 +108,7 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
   double postContainerTrackDragStart = 0.0;
   ///////////////////////////////////////
 
-
+  bool _searchingInProgress = false;
   Stream<dynamic> _fetchFeedback;
   Stream<dynamic> fetchFeedback() {
     setState(() {
@@ -147,7 +146,6 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
 
   @override
   void dispose() {
-    _feedbackAudioPlayer.dispose();
     postContainerAudioPlayer.dispose();
     super.dispose();
   }
@@ -157,7 +155,7 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
   Widget build(BuildContext context) {
     super.build(context);
     return new Scaffold(
-      floatingActionButton: new FloatingActionButton(
+      /* floatingActionButton: new FloatingActionButton(
         elevation: 5.0,
         backgroundColor: Colors.deepPurpleAccent,
         onPressed: () {
@@ -728,7 +726,7 @@ class HomeFeedbackState extends State<HomeFeedback> with AutomaticKeepAliveClien
             });
         },
         child: new Icon(CupertinoIcons.bolt_horizontal_circle_fill, color: Colors.white),
-        ),
+        ),*/
       backgroundColor: Color(0xff121212),
       body:
       new Container(
