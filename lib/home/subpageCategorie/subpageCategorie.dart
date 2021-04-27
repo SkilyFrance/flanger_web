@@ -1,6 +1,8 @@
 import 'dart:html';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flanger_web_version/home/subpageCategorie/subpage_comment.dart';
+import 'package:flanger_web_version/home/subpageCategorie/subpage_textEditing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -93,6 +95,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
         : widget.indexCategories == 10
         ? 'Filling up'
         : 'Melodies')
+      .orderBy('timestamp', descending: true)
       .snapshots();
   }
 
@@ -876,8 +879,10 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                         controller: _testViewController,
                         itemBuilder: (BuildContext contex, int postIndex) {
                         var ds = snapshot.data.docs[postIndex];
+                        TextEditingController commentTextEditing = new TextEditingController();
+                        FocusNode commentFocusNode = new FocusNode();
                         return new Padding(
-                          padding: EdgeInsets.only(top: 20.0),
+                          padding: EdgeInsets.only(top: 30.0),
                         child: new Container(
                           decoration: new BoxDecoration(
                             color: Colors.grey[900],
@@ -888,7 +893,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                           ),
                           width: MediaQuery.of(context).size.width*0.60,
                           child: new Padding(
-                            padding: EdgeInsets.only(top: 20.0),
+                            padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
                           child: new Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -1111,50 +1116,199 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                                     children: [
                                                       new Padding(
                                                         padding: EdgeInsets.only(left: 20.0),
-                                                      child: new LikeButton(
-                                                        size: 30.0,
-                                                        circleColor:
-                                                            CircleColor(start: Color(0xff00ddff), end: Color(0xff0099cc)),
-                                                        bubblesColor: new BubblesColor(
-                                                          dotPrimaryColor: Colors.cyanAccent,
-                                                          dotSecondaryColor: Colors.purpleAccent
+                                                        child: new Container(
+                                                          child: new Row(
+                                                            mainAxisAlignment: MainAxisAlignment.start,
+                                                            children: [
+                                                            new LikeButton(
+                                                              size: 35.0,
+                                                              circleColor:
+                                                                  CircleColor(start: Color(0xff00ddff), end: Color(0xff0099cc)),
+                                                              bubblesColor: new BubblesColor(
+                                                                dotPrimaryColor: Colors.cyanAccent,
+                                                                dotSecondaryColor: Colors.purpleAccent
+                                                              ),
+                                                              likeBuilder: (bool isLiked) {
+                                                                return Icon(
+                                                                  CupertinoIcons.heart_circle_fill,
+                                                                  color: isLiked ? Colors.cyanAccent : Colors.grey,
+                                                                  size: 35.0,
+                                                                );
+                                                              },
+                                                            ),
+                                                          new Padding(
+                                                            padding: EdgeInsets.only(left: 10.0),
+                                                            child: new RichText(
+                                                              text: new TextSpan(
+                                                                text: 'Liked by ',
+                                                                style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.normal),
+                                                                children: [
+                                                                  new TextSpan(
+                                                                    text: 'Ozone, Nickia & 24 others.',
+                                                                    style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                            ],
+                                                          ),
                                                         ),
-                                                        likeBuilder: (bool isLiked) {
-                                                          return Icon(
-                                                            CupertinoIcons.heart_circle_fill,
-                                                            color: isLiked ? Colors.cyanAccent : Colors.grey,
-                                                            size: 30.0,
-                                                          );
-                                                        },
-                                                        likeCount: 665,
-                                                        countBuilder: (int count, bool isLiked, String text) {
-                                                          var color = isLiked ? Colors.white : Colors.grey;
-                                                          Widget result;
-                                                          if (count == 0) {
-                                                            result = Text(
-                                                              "love",
-                                                              style: TextStyle(color: color),
-                                                            );
-                                                          } else
-                                                            result = Text(
-                                                              text,
-                                                              style: TextStyle(color: color),
-                                                            );
-                                                          return result;
-                                                        },
                                                       ),
-                                                    ),
-                                                    new Padding(
-                                                      padding: EdgeInsets.only(right: 100.0),
-                                                      child: new Text('122 comments',
-                                                      style: new TextStyle(color: Colors.grey, fontSize: 14.0),
+                                                      new Padding(
+                                                        padding: EdgeInsets.only(right: 40.0),
+                                                        child: new RichText(
+                                                          text: new TextSpan(
+                                                            text: '24 ',
+                                                            style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold),
+                                                            children: [
+                                                              new TextSpan(
+                                                                text: 'comments',
+                                                                style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.normal),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
-                                                    ),
                                                     ],
                                                   ),
                                                 ),
                                               ],
                                             ),
+                                          ),
+                                        ),
+                                        new Padding(
+                                          padding: EdgeInsets.only(top: 5.0, left: 40.0, right: 40.0),
+                                          child: new SubPageTextEditing(
+                                            currentUser: widget.currentUser,
+                                            currentUserUsername: widget.currentUserUsername,
+                                            currentUserPhoto: widget.currentUserPhoto,
+                                            currentNotificationsToken: widget.currentNotificationsToken,
+                                            adminUID: ds['adminUID'],
+                                            adminProfilephoto: ds['adminProfilephoto'],
+                                            adminUsername: ds['adminUsername'],
+                                            adminNotificationsToken: ds['adminNotificationsToken'],
+                                            currentTextEditingController: commentTextEditing,
+                                            currentFocusNode: commentFocusNode,
+                                            index: postIndex,
+                                            postID: ds['postID'],
+                                            timestamp: ds['timestamp'],
+                                            subject: ds['subject'],
+                                            likes: ds['likes'],
+                                            likedBy: ds['likedBy'],
+                                            comments: ds['comments'],
+                                            commentedBy: ds['commentedBy'],
+                                            reactedBy: ds['reactedBy'],
+                                            savedBy: ds['savedBy'],
+                                            channelDiscussion: widget.indexCategories == 0
+                                            ? 'Melodies'
+                                            : widget.indexCategories == 1
+                                            ? 'Vocals'
+                                            : widget.indexCategories == 2
+                                            ? 'Sound Design'
+                                            : widget.indexCategories == 3
+                                            ? 'Composition'
+                                            : widget.indexCategories == 4
+                                            ? 'Drums'
+                                            : widget.indexCategories == 5
+                                            ? 'Bass'
+                                            : widget.indexCategories == 6
+                                            ? 'Automation'
+                                            : widget.indexCategories == 7
+                                            ? 'Mixing'
+                                            : widget.indexCategories == 8
+                                            ? 'Mastering'
+                                            : widget.indexCategories == 9
+                                            ? 'Music theory'
+                                            : widget.indexCategories == 10
+                                            ? 'Filling up'
+                                            : 'Melodies',
+                                            colorSentButton: widget.indexCategories == 0
+                                            ? Color(0xff3499FF)
+                                            : widget.indexCategories == 1
+                                            ? Color(0xff00B8BA)
+                                            : widget.indexCategories == 2
+                                            ? Color(0xff6454F0)
+                                            : widget.indexCategories == 3
+                                            ? Color(0xffFF6CAB)
+                                            : widget.indexCategories == 4
+                                            ? Color(0xff6EE2F5)
+                                            : widget.indexCategories == 5
+                                            ? Color(0xff7BF2E9)
+                                            : widget.indexCategories == 6
+                                            ? Color(0xffFF9482)
+                                            : widget.indexCategories == 7
+                                            ? Color(0xffF869D5)
+                                            : widget.indexCategories == 8
+                                            ? Color(0xffFF5B94)
+                                            : widget.indexCategories == 9
+                                            ? Color(0xffFF9897)
+                                            : widget.indexCategories == 10
+                                            ? Color(0xffFFCDA5)
+                                            : Colors.grey[900],
+                                          ),
+                                        ),
+                                        new Padding(
+                                          padding: EdgeInsets.only(top: 5.0, left: 40.0, right: 40.0),
+                                          child: new Divider(
+                                            height: 1.0,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        new Padding(
+                                          padding: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0),
+                                          child: new SubPageComment(
+                                            channelDiscussion: widget.indexCategories == 0
+                                            ? 'Melodies'
+                                            : widget.indexCategories == 1
+                                            ? 'Vocals'
+                                            : widget.indexCategories == 2
+                                            ? 'Sound Design'
+                                            : widget.indexCategories == 3
+                                            ? 'Composition'
+                                            : widget.indexCategories == 4
+                                            ? 'Drums'
+                                            : widget.indexCategories == 5
+                                            ? 'Bass'
+                                            : widget.indexCategories == 6
+                                            ? 'Automation'
+                                            : widget.indexCategories == 7
+                                            ? 'Mixing'
+                                            : widget.indexCategories == 8
+                                            ? 'Mastering'
+                                            : widget.indexCategories == 9
+                                            ? 'Music theory'
+                                            : widget.indexCategories == 10
+                                            ? 'Filling up'
+                                            : 'Melodies',
+                                            colorSentButton: widget.indexCategories == 0
+                                            ? Color(0xff3499FF)
+                                            : widget.indexCategories == 1
+                                            ? Color(0xff00B8BA)
+                                            : widget.indexCategories == 2
+                                            ? Color(0xff6454F0)
+                                            : widget.indexCategories == 3
+                                            ? Color(0xffFF6CAB)
+                                            : widget.indexCategories == 4
+                                            ? Color(0xff6EE2F5)
+                                            : widget.indexCategories == 5
+                                            ? Color(0xff7BF2E9)
+                                            : widget.indexCategories == 6
+                                            ? Color(0xffFF9482)
+                                            : widget.indexCategories == 7
+                                            ? Color(0xffF869D5)
+                                            : widget.indexCategories == 8
+                                            ? Color(0xffFF5B94)
+                                            : widget.indexCategories == 9
+                                            ? Color(0xffFF9897)
+                                            : widget.indexCategories == 10
+                                            ? Color(0xffFFCDA5)
+                                            : Colors.grey[900],
+                                            currentUser: widget.currentUser,
+                                            currentUserUsername: widget.currentUserUsername,
+                                            currentUserPhoto: widget.currentUserPhoto,
+                                            currentNotificationsToken: widget.currentNotificationsToken,
+                                            postID: ds['postID'],
                                           ),
                                         ),
                                       ],
@@ -1169,7 +1323,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                         );
                         })
                       );
-                    }),
+                  }),
 
               ),
               ),
