@@ -73,6 +73,17 @@ flutter:
     - web/icons/test.png
     - web/icons/goldMedal.png
     - web/icons/ninjaMedal.png
+    - web/icons/shedding1.jpeg
+    - web/icons/shedding2.jpeg
+    - web/icons/shedding3.jpeg
+    - web/icons/shedding4.jpeg
+    - web/icons/shedding5.jpeg
+    - web/icons/shedding6.jpeg
+    - web/icons/shedding7.jpeg
+    - web/icons/shedding8.jpeg
+    - web/icons/shedding9.jpeg
+    - web/icons/shedding10.jpeg
+    - web/icons/shedding11.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

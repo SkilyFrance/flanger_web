@@ -43,8 +43,8 @@ class ListCategorieDiscussion extends StatefulWidget {
 class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
 
  ScrollController _categorieDiscussionScrollController = new ScrollController();
- double heightCard = 130.0;
- double widthCard = 210.0;
+ double heightCard = 180.0;
+ double widthCard = 200.0;
  int categoriePointed;
 
 
@@ -64,17 +64,17 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
     return new Padding(
       padding: EdgeInsets.only(top: 30.0),
       child: new Container(
-      height: 120.0,
-      width: MediaQuery.of(context).size.width,
+        width: widthCard,
       child: new ListView.builder(
-      padding: EdgeInsets.only(left: 20.0, right: 20.0),
-      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.only(left: 0.0, right: 0.0),
+      scrollDirection: Axis.vertical,
+      physics: new NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       controller: _categorieDiscussionScrollController,
       itemCount: 11,
       itemBuilder: (BuildContext context, int indexCategories) {
         return new Padding(
-          padding: EdgeInsets.only(left: 15.0),
+          padding: EdgeInsets.only(top: 20.0),
           child: new MouseRegion(
             onEnter: (isEntering) {
               setState(() {
@@ -113,8 +113,7 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
                 gradient: new LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors:
-                indexCategories == 0
+                  colors:indexCategories == 0
                 ? [Color(0xff3499FF), Color(0xff3A3985)]
                 : indexCategories == 1
                 ? [Color(0xff00B8BA), Color(0xff6454F0)]
@@ -149,14 +148,40 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
                 color: Colors.black.withOpacity(0.4),
                  ),
                  child: new Center(
-                   child: new Icon(CupertinoIcons.eye_fill, color: Colors.white, size: 20.0),
+                   child: new Text(
+                     indexCategories == 0
+                     ? 'Melodies'
+                     : indexCategories == 1
+                     ? 'Vocals'
+                     : indexCategories == 2
+                     ? 'Sound Design'
+                     : indexCategories == 3
+                     ? 'Composition'
+                     : indexCategories == 4
+                     ? 'Drums'
+                     : indexCategories == 5
+                     ? 'Bass'
+                     : indexCategories == 6
+                     ? 'Automation'
+                     : indexCategories == 7
+                     ? 'Mixing'
+                     : indexCategories == 8
+                     ? 'Mastering'
+                     : indexCategories == 9
+                     ? 'Music theory'
+                     :indexCategories == 10
+                     ? 'Filling up'
+                     : 'Melodies',
+                     style: new TextStyle(fontSize: 25.0, color: Colors.white),
+                    ),
                  ),
                )
-              : new Column(
+              : /*new Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
+                children: [*/
                   new Padding(
                     padding: EdgeInsets.all(0.0),
+                    child: new Center(
                     child: new Text(
                      indexCategories == 0
                      ? 'Melodies'
@@ -183,8 +208,34 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
                      : 'Melodies',
                      style: new TextStyle(fontSize: 30.0, color: Colors.white),
                     ),
-                  ),
-                ],
+                     /* child: new Image.asset(
+                     indexCategories == 0
+                     ? 'web/icons/shedding1.jpeg'
+                     : indexCategories == 1
+                     ? 'web/icons/shedding2.jpeg'
+                     : indexCategories == 2
+                     ? 'web/icons/shedding3.jpeg'
+                     : indexCategories == 3
+                     ? 'web/icons/shedding4.jpeg'
+                     : indexCategories == 4
+                     ? 'web/icons/shedding5.jpeg'
+                     : indexCategories == 5
+                     ? 'web/icons/shedding6.jpeg'
+                     : indexCategories == 6
+                     ? 'web/icons/shedding8.jpeg'
+                     : indexCategories == 7
+                     ? 'web/icons/shedding7.jpeg'
+                     : indexCategories == 8
+                     ? 'web/icons/shedding10.jpeg'
+                     : indexCategories == 9
+                     ? 'web/icons/shedding9.jpeg'
+                     :indexCategories == 10
+                     ? 'web/icons/shedding11.png'
+                     : 'Melodies',
+                     fit: BoxFit.cover),*/
+                    )
+                 // ),
+                //],
               ),
               ),
             ),

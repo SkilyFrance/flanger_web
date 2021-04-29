@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flanger_web_version/home/subpageCategorie/subpage_reply.dart';
-import 'package:flanger_web_version/home/subpageCategorie/subreply_textEditing.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:like_button/like_button.dart';
 
-class SubPageComment extends StatefulWidget {
+class SubReply extends StatefulWidget {
 
   //ChannelDiscussion
   String channelDiscussion;
@@ -17,10 +15,12 @@ class SubPageComment extends StatefulWidget {
   String currentUserPhoto;
   String currentNotificationsToken;
 
-  //Post ID
+  //variablesPath
   String postID;
+  String commentID;
 
-  SubPageComment({
+
+  SubReply({
     Key key,
     this.channelDiscussion,
     this.colorSentButton,
@@ -29,38 +29,43 @@ class SubPageComment extends StatefulWidget {
     this.currentUserPhoto,
     this.currentNotificationsToken,
     this.postID,
+    this.commentID,
     }) : super(key: key);
-
+  
 
 
   @override
-  SubPageCommentState createState() => SubPageCommentState();
+  SubReplyState createState() => SubReplyState();
 }
 
-class SubPageCommentState extends State<SubPageComment> {
+class SubReplyState extends State<SubReply> {
 
-  ScrollController _commentListViewController = new ScrollController();
+  ScrollController _replyListViewController = new ScrollController();
 
-  Stream<dynamic> _fetchAllComments;
-  Stream<dynamic> fetchAllComments() {
+  Stream<dynamic> _fetchAllReplies;
+  Stream<dynamic> fetchAllReplies() {
     return FirebaseFirestore.instance
       .collection('${widget.channelDiscussion}')
       .doc('${widget.postID}')
       .collection('comments')
+      .doc(widget.commentID)
+      .collection('replies')
       .orderBy('timestamp', descending: true)
       .snapshots();
   }
 
-  Future<bool> onLikeButtonTapped(bool isLiked, Map<dynamic, dynamic> likedBy, String postID, String commentID) async {
-    if(likedBy == null || likedBy.containsKey(widget.currentUser) == false) {
+  Future<bool> onLikeButtonTapped(bool isLiked, Map<dynamic, dynamic> likedBy, String replyID) async {
+    if(likedBy.containsKey(widget.currentUser) == false) {
       setState(() {
         likedBy[widget.currentUser] = widget.currentUserUsername;
       });
       FirebaseFirestore.instance
         .collection(widget.channelDiscussion)
-        .doc(postID)
+        .doc(widget.postID)
         .collection('comments')
-        .doc(commentID)
+        .doc(widget.commentID)
+        .collection('replies')
+        .doc(replyID)
         .update({
           'likes': FieldValue.increment(1),
           'likedBy': likedBy,
@@ -72,9 +77,11 @@ class SubPageCommentState extends State<SubPageComment> {
       });
       FirebaseFirestore.instance
         .collection(widget.channelDiscussion)
-        .doc(postID)
+        .doc(widget.postID)
         .collection('comments')
-        .doc(commentID)
+        .doc(widget.commentID)
+        .collection('replies')
+        .doc(replyID)
         .update({
           'likes': FieldValue.increment(-1),
           'likedBy': likedBy,
@@ -85,15 +92,17 @@ class SubPageCommentState extends State<SubPageComment> {
 
   @override
   void initState() {
-    _fetchAllComments = fetchAllComments();
+    _fetchAllReplies = fetchAllReplies();
     super.initState();
   }
+
+
 
 
   @override
   Widget build(BuildContext context) {
     return new StreamBuilder(
-      stream: _fetchAllComments,
+      stream: _fetchAllReplies,
       builder: (BuildContext context, snapshot) {
         if(snapshot.hasError || !snapshot.hasData) {}
         if(snapshot.connectionState == ConnectionState.waiting) {
@@ -115,12 +124,10 @@ class SubPageCommentState extends State<SubPageComment> {
         }
         return new ListView.builder(
           shrinkWrap: true,
-          controller: _commentListViewController,
+          controller: _replyListViewController,
           itemCount: snapshot.data.docs.length,
           itemBuilder: (BuildContext context, int commentIndex) {
             var ds = snapshot.data.docs[commentIndex];
-            TextEditingController replyTextEditing = new TextEditingController();
-            FocusNode replyhFocusNode = new FocusNode();
             return new Padding(
               padding: EdgeInsets.only(top: 10.0),
               child: new Container(
@@ -133,7 +140,7 @@ class SubPageCommentState extends State<SubPageComment> {
                   ),
                 ),
                 child: new Padding(
-                  padding: EdgeInsets.only(left: 15.0, top: 10.0, bottom: 10.0),
+                  padding: EdgeInsets.only(left: 15.0, top: 10.0, bottom: 5.0),
                 child: new Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -148,8 +155,8 @@ class SubPageCommentState extends State<SubPageComment> {
                        shape: BoxShape.circle,
                      ),
                      child: new ClipOval(
-                       child: ds['commentatorProfilephoto']  != null
-                     ? new Image.network(ds['commentatorProfilephoto'], fit: BoxFit.cover)
+                       child: ds['replierProfilephoto']  != null
+                     ? new Image.network(ds['replierProfilephoto'], fit: BoxFit.cover)
                      : new Container(),
                      ),
                    ),
@@ -158,7 +165,7 @@ class SubPageCommentState extends State<SubPageComment> {
                    new Padding(
                      padding: EdgeInsets.only(left: 15.0, top: 5.0),
                      child: new Container(
-                        color: Color(0xff0d1117),
+                       color: Color(0xff0d1117),
                        child: new Padding(
                          padding: EdgeInsets.all(15.0),
                        child: new Column(
@@ -167,8 +174,8 @@ class SubPageCommentState extends State<SubPageComment> {
                           new Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                            new Text(ds['commentatorUsername'] != null
-                            ? ds['commentatorUsername']
+                            new Text(ds['replierUsername'] != null
+                            ? ds['replierUsername']
                             : 'Username',
                             style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold),
                             ),
@@ -289,8 +296,7 @@ class SubPageCommentState extends State<SubPageComment> {
                                        return onLikeButtonTapped(
                                          isLiked,
                                          ds['likedBy'],
-                                         ds['postID'],
-                                         ds['timestamp'].toString()+ds['commentatorUsername'],
+                                         ds['timestamp'].toString()+ds['replierUsername'],
                                        );
                                       },
                                       size: 28.0,
@@ -304,7 +310,7 @@ class SubPageCommentState extends State<SubPageComment> {
                                         return Icon(
                                           CupertinoIcons.heart_circle_fill,
                                           color: ds['likedBy'] != null && ds['likedBy'].containsKey(widget.currentUser) == true ? Colors.cyanAccent : Colors.grey,
-                                          size: 35.0,
+                                          size: 28.0,
                                         );
                                       },
                                     ),
@@ -341,36 +347,6 @@ class SubPageCommentState extends State<SubPageComment> {
                                 ),
                                 new Padding(
                                   padding: EdgeInsets.only(top: 15.0, left: 10.0),
-                                child: new Container(
-                                decoration: new BoxDecoration(
-                                  color: Color(0xff0d1117),
-                                  borderRadius: new BorderRadius.circular(30.0),
-                                  border: new Border.all(
-                                    width: 1.0,
-                                    color: Color(0xff21262D),
-                                  ),
-                                ),
-                                  padding: EdgeInsets.all(15.0),
-                                  child: new Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      new Center(
-                                        child: new InkWell(
-                                          onTap: () {}, 
-                                          child: new Text(
-                                            ds['comments'] != null
-                                            ? ds['comments'].toString() + ' comments'
-                                            : '',
-                                          style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.bold),
-                                          ),
-                                          ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ),
-                                new Padding(
-                                  padding: EdgeInsets.only(top: 15.0, left: 10.0),
                                   child: new Text(
                                     ds['timestamp'] != null && DateTime.now().difference(DateTime.fromMicrosecondsSinceEpoch(ds['timestamp'])).inMinutes < 1
                                     ? 'few sec ago'
@@ -394,48 +370,8 @@ class SubPageCommentState extends State<SubPageComment> {
                        ),
                      ),
                      ),
-                     new Padding(
-                       padding: EdgeInsets.only(top: 5.0, left: 40.0, right: 40.0),
-                       child: new SubReplyTextEditing(
-                        channelDiscussion: widget.channelDiscussion,
-                        colorSentButton: widget.colorSentButton,
-                        currentUser: widget.currentUser,
-                        currentUserUsername: widget.currentUserUsername,
-                        currentUserPhoto: widget.currentUserPhoto,
-                        currentNotificationsToken: widget.currentNotificationsToken,
-                        adminUID: ds['adminUID'],
-                        commentatorUID: ds['commentatorUID'],
-                        commentatorUsername: ds['commentatorUsername'],
-                        currentTextEditingController: replyTextEditing,
-                        currentFocusNode: replyhFocusNode,
-                        index: commentIndex,
-                        postID: ds['postID'],
-                        commentID: ds['timestamp'].toString()+ds['commentatorUsername'],
-                        commentTimestamp: ds['timestamp'],
-                        subject: ds['subject'],
-                        likes: ds['likes'],
-                        likedBy: ds['likedBy'],
-                        comments: ds['comments'],
-                        commentedBy: ds['commentedBy'],
-                        reactedBy: ds['reactedBy'],
-                       )
-                     ),
-                     new Padding(
-                       padding: EdgeInsets.only(top: 5.0, left: 40.0, right: 40.0),
-                       child: new SubReply(
-                         channelDiscussion: widget.channelDiscussion,
-                         colorSentButton: widget.colorSentButton,
-                         currentUser: widget.currentUser,
-                         currentUserUsername: widget.currentUserUsername,
-                         currentUserPhoto: widget.currentUserPhoto,
-                         currentNotificationsToken: widget.currentNotificationsToken,
-                         postID: widget.postID,
-                         commentID: ds['timestamp'].toString()+ds['commentatorUsername'],
-                       ),
-                     ),
                   ],
                 ),
-
                 ),
                 ),
             );

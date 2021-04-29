@@ -69,6 +69,79 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
   ////////////////
   
 
+  Future<bool> onLikeButtonTapped(bool isLiked, Map<dynamic, dynamic> likedBy, String postID) async {
+    if(likedBy == null || likedBy.containsKey(widget.currentUser) == false) {
+      setState(() {
+        likedBy[widget.currentUser] = widget.currentUserUsername;
+        print('likedBy = ' + likedBy.toString());
+      });
+      FirebaseFirestore.instance
+        .collection(widget.indexCategories == 0
+        ? 'Melodies'
+        : widget.indexCategories == 1
+        ? 'Vocals'
+        : widget.indexCategories == 2
+        ? 'Sound Design'
+        : widget.indexCategories == 3
+        ? 'Composition'
+        : widget.indexCategories == 4
+        ? 'Drums'
+        : widget.indexCategories == 5
+        ? 'Bass'
+        : widget.indexCategories == 6
+        ? 'Automation'
+        : widget.indexCategories == 7
+        ? 'Mixing'
+        : widget.indexCategories == 8
+        ? 'Mastering'
+        : widget.indexCategories == 9
+        ? 'Music theory'
+        : widget.indexCategories == 10
+        ? 'Filling up'
+        : 'Melodies')
+        .doc(postID)
+        .update({
+          'likes': FieldValue.increment(1),
+          'likedBy': likedBy,
+        }).whenComplete(() => print('Cloud firestore : Like +1'));
+        return !isLiked;
+    } else {
+      setState(() {
+        likedBy.remove(widget.currentUser);
+      });
+      FirebaseFirestore.instance
+        .collection(widget.indexCategories == 0
+        ? 'Melodies'
+        : widget.indexCategories == 1
+        ? 'Vocals'
+        : widget.indexCategories == 2
+        ? 'Sound Design'
+        : widget.indexCategories == 3
+        ? 'Composition'
+        : widget.indexCategories == 4
+        ? 'Drums'
+        : widget.indexCategories == 5
+        ? 'Bass'
+        : widget.indexCategories == 6
+        ? 'Automation'
+        : widget.indexCategories == 7
+        ? 'Mixing'
+        : widget.indexCategories == 8
+        ? 'Mastering'
+        : widget.indexCategories == 9
+        ? 'Music theory'
+        : widget.indexCategories == 10
+        ? 'Filling up'
+        : 'Melodies')
+        .doc(postID)
+        .update({
+          'likes': FieldValue.increment(-1),
+          'likedBy': likedBy,
+        }).whenComplete(() => print('Cloud firestore : Like -1'));
+      return !isLiked;
+    }
+  }
+
   Stream<dynamic> _fetchPost;
   Stream<dynamic> fetchPost() {
     return FirebaseFirestore.instance
@@ -457,7 +530,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
       body: new Container(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
-        color: Color(0xff121212),
+        color: Color(0xff0d1117), //Color(0xff121212),
         child: new Scrollbar(
           isAlwaysShown: true,
         child: new SingleChildScrollView(
@@ -526,8 +599,12 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                   height: 160.0,
                   width: 350.0,
                   decoration: new BoxDecoration(
-                    color: Colors.grey[900],
+                    color: Color(0xff0d1117),
                     borderRadius: new BorderRadius.circular(10.0),
+                    border: new Border.all(
+                      width: 1.0,
+                      color: Color(0xff21262D),
+                    ),
                   ),
                   child: new Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -668,8 +745,12 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                   height: 160.0,
                   width: 350.0,
                   decoration: new BoxDecoration(
-                    color: Colors.grey[900],
+                    color: Color(0xff0d1117),
                     borderRadius: new BorderRadius.circular(10.0),
+                    border: new Border.all(
+                      width: 1.0,
+                      color: Color(0xff21262D),
+                    ),
                   ),
                   child: new Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -806,7 +887,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                 ],
               ),
             ),
-            new Padding(
+            /*new Padding(
               padding: EdgeInsets.only(top: 20.0),
               child: new Container(
                 height: 60.0,
@@ -851,9 +932,9 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                     ]
                   ),
               ),
-              ),
+              ),*/
               new Padding(
-                padding: EdgeInsets.only(top: 30.0),
+                padding: EdgeInsets.only(top: 10.0),
                 child: new Container(
                   width: MediaQuery.of(context).size.width*0.60,
                   child: new StreamBuilder(
@@ -879,14 +960,30 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                         controller: _testViewController,
                         itemBuilder: (BuildContext contex, int postIndex) {
                         var ds = snapshot.data.docs[postIndex];
+                       // print('Likedby = ' + ds['likedBy'].containsKey('00').toString());
                         TextEditingController commentTextEditing = new TextEditingController();
                         FocusNode commentFocusNode = new FocusNode();
                         return new Padding(
                           padding: EdgeInsets.only(top: 30.0),
+                        child: new Material(
+                          elevation: 20.0,
+                          borderRadius: new BorderRadius.circular(10.0),
                         child: new Container(
                           decoration: new BoxDecoration(
-                            color: Colors.grey[900],
+                            color: Color(0xff0d1117),
                             borderRadius: new BorderRadius.circular(10.0),
+                            border: new Border.all(
+                              width: 1.0,
+                              color: Color(0xff21262D),
+                            ),
+                                boxShadow: [
+                                  new BoxShadow(
+                                    color: Color(0xff21262D),
+                                    spreadRadius: 2,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 0), // changes position of shadow
+                                  ),
+                                ],
                           ),
                           constraints: new BoxConstraints(
                             minHeight: 600.0,
@@ -1002,7 +1099,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                     ),
                                     width: MediaQuery.of(context).size.width*0.60,
                                     decoration: new BoxDecoration(
-                                      color: Colors.grey[900],
+                                      color: Color(0xff0d1117), //Color(0xff21262D), //Colors.grey[900],
                                       borderRadius: new BorderRadius.circular(10.0),
                                     ),
                                     child: new Column(
@@ -1013,7 +1110,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                             mainAxisAlignment: MainAxisAlignment.start,
                                             children: [
                                             new Padding(
-                                                padding: EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0),
+                                                padding: EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
                                                 child: new Text(
                                                   ds['subject'] != null
                                                   ? ds['subject']
@@ -1043,10 +1140,35 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                         new Padding(
                                           padding: EdgeInsets.only(top: 20.0),
                                         child: ds['withImage'] == true && ds['imageURL'] != null
-                                        ? new Container(
+                                        ? new Tooltip(
+                                          message: 'Click to zoom',
+                                          textStyle: new TextStyle(color: Colors.white, fontSize: 12.0),
+                                        child: new InkWell(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context, 
+                                            builder: (BuildContext context) {
+                                              return new AlertDialog(
+                                                backgroundColor: Colors.transparent,
+                                                title: new Container(
+                                                  decoration: new BoxDecoration(
+                                                    color: Colors.grey[900],
+                                                    borderRadius: new BorderRadius.circular(5.0),
+                                                  ),
+                                                  child: new ClipRRect(
+                                                    borderRadius: new BorderRadius.circular(5.0),
+                                                    child: new Image.network(ds['imageURL'], fit: BoxFit.cover),
+                                                  ),
+                                                ),
+                                              );
+                                            });
+                                        },
+                                        child: new Container(
                                           height: 400.0,
                                           width: MediaQuery.of(context).size.width*0.60,
                                           child: new Image.network(ds['imageURL'], fit: BoxFit.cover),
+                                        ),
+                                        ),
                                         )
                                         : new Container(
                                           height: 400.0,
@@ -1097,10 +1219,12 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                         new Padding(
                                           padding: EdgeInsets.only(top: 20.0),
                                           child: new Container(
-                                            height: 50.0,
+                                            constraints: new BoxConstraints(
+                                              minHeight: 60.0
+                                            ),
                                             width: MediaQuery.of(context).size.width*0.60,
                                             decoration: new BoxDecoration(
-                                              color: Colors.grey[900],
+                                              color: Color(0xff0d1117), //Color(0xff21262D), //Colors.grey[900],
                                               borderRadius: new BorderRadius.only(
                                                 bottomLeft: Radius.circular(10.0),
                                                 bottomRight: Radius.circular(10.0),
@@ -1112,18 +1236,36 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                                 new Container(
                                                   width: MediaQuery.of(context).size.width*0.60,
                                                   child: new Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    mainAxisAlignment: MainAxisAlignment.start,
                                                     children: [
                                                       new Padding(
                                                         padding: EdgeInsets.only(left: 20.0),
+                                                        child: new Material(
+                                                          elevation: 20.0,
+                                                          borderRadius: new BorderRadius.circular(30.0),
                                                         child: new Container(
+                                                          decoration: new BoxDecoration(
+                                                            color: Color(0xff0d1117), // Color(0xff121212),
+                                                            borderRadius: new BorderRadius.circular(30.0),
+                                                            border: Border.all(
+                                                              width: 1.0,
+                                                              color: Color(0xff21262D),
+                                                            ),
+                                                          ),
+                                                          padding: EdgeInsets.all(8.0),
                                                           child: new Row(
                                                             mainAxisAlignment: MainAxisAlignment.start,
                                                             children: [
                                                             new LikeButton(
+                                                              onTap: (isLiked) {
+                                                                return onLikeButtonTapped(
+                                                                  isLiked,
+                                                                  ds['likedBy'],
+                                                                  ds['postID'],
+                                                                );
+                                                              },
                                                               size: 35.0,
-                                                              circleColor:
-                                                                  CircleColor(start: Color(0xff00ddff), end: Color(0xff0099cc)),
+                                                              circleColor: CircleColor(start: Color(0xff00ddff), end: Color(0xff0099cc)),
                                                               bubblesColor: new BubblesColor(
                                                                 dotPrimaryColor: Colors.cyanAccent,
                                                                 dotSecondaryColor: Colors.purpleAccent
@@ -1131,7 +1273,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                                               likeBuilder: (bool isLiked) {
                                                                 return Icon(
                                                                   CupertinoIcons.heart_circle_fill,
-                                                                  color: isLiked ? Colors.cyanAccent : Colors.grey,
+                                                                  color: ds['likedBy'] != null && ds['likedBy'].containsKey(widget.currentUser) == true ? Colors.cyanAccent : Colors.grey,
                                                                   size: 35.0,
                                                                 );
                                                               },
@@ -1144,30 +1286,60 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                                                 style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.normal),
                                                                 children: [
                                                                   new TextSpan(
-                                                                    text: 'Ozone, Nickia & 24 others.',
+                                                                    text: ds['likedBy'] != null && ds['likedBy'].length < 3
+                                                                    ? ds['likedBy'].values.toList().join(', ').toString()
+                                                                    : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == true
+                                                                    ? ds['likedBy'][widget.currentUser].toString() 
+                                                                    + ', ' + ds['likedBy'].values.elementAt(1).toString() 
+                                                                    + ', ' + (ds['likedBy'].length-2).toString() 
+                                                                    + ' others'
+                                                                    : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == false
+                                                                    ? ds['likedBy'].values.elementAt(0).toString() 
+                                                                    + ', ' + ds['likedBy'].values.elementAt(1).toString() 
+                                                                    + ', ' + (ds['likedBy'].length-2).toString() 
+                                                                    + ' others'
+                                                                    : 'nobody yet.',
                                                                     style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold),
                                                                   ),
                                                                 ],
                                                               ),
                                                             ),
                                                           ),
-                                                            ],
+                                                          ],
                                                           ),
+                                                        ),
                                                         ),
                                                       ),
                                                       new Padding(
-                                                        padding: EdgeInsets.only(right: 40.0),
+                                                        padding: EdgeInsets.only(left: 20.0),
+                                                        child: new Material(
+                                                          elevation: 20.0,
+                                                          borderRadius: new BorderRadius.circular(30.0),
+                                                        child: new Container(
+                                                          decoration: new BoxDecoration(
+                                                            color: Color(0xff0d1117), // Color(0xff121212),
+                                                            borderRadius: new BorderRadius.circular(30.0),
+                                                            border: Border.all(
+                                                              width: 1.0,
+                                                              color: Color(0xff21262D),
+                                                            ),
+                                                          ),
+                                                          padding: EdgeInsets.all(17.0),
                                                         child: new RichText(
                                                           text: new TextSpan(
-                                                            text: '24 ',
+                                                            text: ds['comments'] != null
+                                                            ? ds['comments'].toString()
+                                                            : '',
                                                             style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.bold),
                                                             children: [
                                                               new TextSpan(
-                                                                text: 'comments',
+                                                                text: ' comments',
                                                                 style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.normal),
                                                               ),
                                                             ],
                                                           ),
+                                                        ),
+                                                        ),
                                                         ),
                                                       ),
                                                     ],
@@ -1248,13 +1420,13 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                             : Colors.grey[900],
                                           ),
                                         ),
-                                        new Padding(
+                                       /* new Padding(
                                           padding: EdgeInsets.only(top: 5.0, left: 40.0, right: 40.0),
                                           child: new Divider(
                                             height: 1.0,
                                             color: Colors.grey[600],
                                           ),
-                                        ),
+                                        ),*/
                                         new Padding(
                                           padding: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0),
                                           child: new SubPageComment(
@@ -1318,6 +1490,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                               ),
                             ],
                           ),
+                        ),
                         ),
                         ),
                         );

@@ -1,12 +1,11 @@
 import 'dart:html';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-
-class SubPageTextEditing extends StatefulWidget {
+class SubReplyTextEditing extends StatefulWidget {
 
   //ChannelDiscussion
   String channelDiscussion;
@@ -20,18 +19,20 @@ class SubPageTextEditing extends StatefulWidget {
 
   //AdminUser
   String adminUID;
-  String adminProfilephoto;
-  String adminUsername;
-  String adminNotificationsToken;
+
+  //CommentatorUser
+  String commentatorUID;
+  String commentatorUsername;
 
   //PostVariables
   TextEditingController currentTextEditingController;
   FocusNode currentFocusNode;
 
-  //Post datas
+  //Comment datas
   int index;
   String postID;
-  int timestamp;
+  String commentID;
+  int commentTimestamp;
   String subject;
   //
   int likes;
@@ -41,56 +42,51 @@ class SubPageTextEditing extends StatefulWidget {
   List<dynamic> commentedBy;
   //
   Map<dynamic, dynamic> reactedBy;
-  //
-  List<dynamic> savedBy;
 
-  SubPageTextEditing({
+  SubReplyTextEditing({
     Key key,
-    //ChannelDiscussion
-    this.channelDiscussion,
-    this.colorSentButton,
+  //ChannelDiscussion
+  this.channelDiscussion,
+  this.colorSentButton,
 
-    //CurrentUser
-    this.currentUser,
-    this.currentUserUsername,
-    this.currentUserPhoto,
-    this.currentNotificationsToken,
+  //CurrentUser
+  this.currentUser,
+  this.currentUserUsername,
+  this.currentUserPhoto,
+  this.currentNotificationsToken,
 
-    //AdminUser
-    this.adminUID,
-    this.adminProfilephoto,
-    this.adminUsername,
-    this.adminNotificationsToken,
+  //AdminUser
+  this.adminUID,
 
-    //PostVariables
-    this.currentTextEditingController,
-    this.currentFocusNode,
+  //CommentatorUser
+  this.commentatorUID,
+  this.commentatorUsername,
 
-    //Post datas
-    this.index,
-    this.postID,
-    this.timestamp,
-    this.subject,
-    //
-    this.likes,
-    this.likedBy,
-    //
-    this.comments,
-    this.commentedBy,
-    //
-    this.reactedBy,
-    //
-    this.savedBy,
+  //PostVariables
+  this.currentTextEditingController,
+  this.currentFocusNode,
+
+  //Comment datas
+  this.index,
+  this.postID,
+  this.commentID,
+  this.commentTimestamp,
+  this.subject,
+  //
+  this.likes,
+  this.likedBy,
+  //
+  this.comments,
+  this.commentedBy,
+  //
+  this.reactedBy,
   }) : super(key: key);
 
-
-
   @override
-  SubPageTextEditingState createState() => SubPageTextEditingState();
+  SubReplyTextEditingState createState() => SubReplyTextEditingState();
 }
 
-class SubPageTextEditingState extends State<SubPageTextEditing> {
-
+class SubReplyTextEditingState extends State<SubReplyTextEditing> {
   //PostPhoto case //
   TextEditingController dialogTextEditingController = new TextEditingController();
   FocusNode dialogFocusNode = new FocusNode();
@@ -101,6 +97,11 @@ class SubPageTextEditingState extends State<SubPageTextEditing> {
   File _imageUploadedToPost;
   String _fileURLPhotoUploaded = 'null';
   bool _photoUploadInProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -252,62 +253,63 @@ class SubPageTextEditingState extends State<SubPageTextEditing> {
                                         .collection('${widget.channelDiscussion}')
                                         .doc(widget.postID)
                                         .collection('comments')
+                                        .doc(widget.commentID)
+                                        .collection('replies')
                                         .doc('$_timestampCreation${widget.currentUserUsername}')
                                         .set({
                                           'adminUID': widget.adminUID,
-                                          'commentatorProfilephoto': widget.currentUserPhoto,
-                                          'commentatorUID': widget.currentUser,
-                                          'commentatorUsername': widget.currentUserUsername,
+                                          'commentatorUID': widget.commentatorUID,
+                                          'replierUID': widget.currentUser,
+                                          'replierProfilephoto': widget.currentUserPhoto,
+                                          'replierUsername': widget.currentUserUsername,
                                           'content': dialogTextEditingController.value.text,
                                           'postID': widget.postID,
                                           'subject': widget.subject,
                                           'timestamp': _timestampCreation,
                                           'withImage': _fileURLPhotoUploaded != 'null' ? true : false,
                                           'imageURL': _fileURLPhotoUploaded != 'null' ? _fileURLPhotoUploaded : null,
-                                          'commentedBy': null,
-                                          'comments': 0,
                                           'likedBy': likedBy,
                                           'likes': 0,
-                                          'reactedBy': {
-                                            '${widget.currentUser}': widget.currentNotificationsToken,
-                                          }
+                                          'reactedBy': null,
                                         }).whenComplete(() {
                                           dialogTextEditingController.clear();
+                                          dialogFocusNode.unfocus();
                                           FirebaseFirestore.instance
-                                            .collection('${widget.channelDiscussion}')
-                                            .doc(widget.postID)
-                                            .update({
-                                              'comments': FieldValue.increment(1),
-                                              'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
-                                              'reactedBy': widget.reactedBy,
-                                            }).whenComplete(() {
-                                              widget.reactedBy.forEach((key, value) {
-                                                if(key == widget.currentUser) {
-                                                  print('No send notification here cause it is current user.');
-                                                } else {
-                                                FirebaseFirestore.instance
-                                                  .collection('users')
-                                                  .doc(key.toString())
-                                                  .collection('notifications')
-                                                  .doc(_timestampCreation.toString()+widget.currentUser)
-                                                  .set({
-                                                    'alreadySeen': false,
-                                                    'notificationID': _timestampCreation.toString()+widget.currentUser,
-                                                    'body': 'has commented this post 💬',
-                                                    'currentNotificationsToken': value.toString(),
-                                                    'lastUserProfilephoto': widget.currentUserPhoto,
-                                                    'lastUserUID': widget.currentUser,
-                                                    'lastUserUsername': widget.currentUserUsername,
-                                                    'postID': widget.postID,
-                                                    'title': widget.subject,
-                                                  }).whenComplete(() {
-                                                    print('Cloud Firestore : notifications updated for $key');
-                                                    dialogFocusNode.unfocus();
-                                                    Navigator.pop(context);
-                                                  });
-                                                }
+                                          .collection('${widget.channelDiscussion}')
+                                          .doc(widget.postID)
+                                          .collection('comments')
+                                          .doc(widget.commentID)
+                                          .update({
+                                            'comments': FieldValue.increment(1),
+                                            'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                            'reactedBy': widget.reactedBy,
+                                          }).whenComplete(() {
+                                          widget.reactedBy.forEach((key, value) {
+                                            if(key == widget.currentUser) {
+                                              print('No send notification here cause it is current user.');
+                                            } else {
+                                            FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(key.toString())
+                                              .collection('notifications')
+                                              .doc(_timestampCreation.toString()+widget.currentUser)
+                                              .set({
+                                                'alreadySeen': false,
+                                                'notificationID': _timestampCreation.toString()+widget.currentUser,
+                                                'body': 'has replied under this comment 💬',
+                                                'currentNotificationsToken': value.toString(),
+                                                'lastUserProfilephoto': widget.currentUserPhoto,
+                                                'lastUserUID': widget.currentUser,
+                                                'lastUserUsername': widget.currentUserUsername,
+                                                'postID': widget.postID,
+                                                'title': widget.subject,
+                                              }).whenComplete(() {
+                                                print('Cloud Firestore : notifications updated for $key');
+                                                Navigator.pop(context);
                                               });
-                                            });
+                                            }
+                                          });
+                                          });
                                         });
                                       } else {
                                         print('TextEditing : Nothing to send');
@@ -363,69 +365,69 @@ class SubPageTextEditingState extends State<SubPageTextEditing> {
                  .collection('${widget.channelDiscussion}')
                  .doc(widget.postID)
                  .collection('comments')
-                 .doc('$_timestampCreation${widget.currentUserUsername}')
+                 .doc(widget.commentID)
+                 .collection('replies')
+                 .doc('${_timestampCreation.toString()}${widget.currentUserUsername}')
                  .set({
-                   'adminUID': widget.adminUID,
-                   'commentatorProfilephoto': widget.currentUserPhoto,
-                   'commentatorUID': widget.currentUser,
-                   'commentatorUsername': widget.currentUserUsername,
-                   'content': widget.currentTextEditingController.value.text,
-                   'postID': widget.postID,
-                   'subject': widget.subject,
-                   'timestamp': _timestampCreation,
-                   'withImage': false,
-                   'imageURL': null,
-                   'commentedBy': null,
-                   'comments': 0,
-                   'likedBy': likedBy,
-                   'likes': 0,
-                   'reactedBy': {
-                     '${widget.currentUser}': widget.currentNotificationsToken,
-                   }
+                 'adminUID': widget.adminUID,
+                  'commentatorUID': widget.commentatorUID,
+                  'replierUID': widget.currentUser,
+                  'replierProfilephoto': widget.currentUserPhoto,
+                  'replierUsername': widget.currentUserUsername,
+                  'content': widget.currentTextEditingController.value.text,
+                  'postID': widget.postID,
+                  'subject': widget.subject,
+                  'timestamp': _timestampCreation,
+                  'withImage': false,
+                  'imageURL': null,
+                  'likedBy': likedBy,
+                  'likes': 0,
+                  'reactedBy': widget.reactedBy,
                  }).whenComplete(() {
+                   widget.currentTextEditingController.clear();
+                   widget.currentFocusNode.unfocus();
                   setState(() {
                     inPosting = false;
                   });
-                  widget.currentTextEditingController.clear();
                    FirebaseFirestore.instance
-                     .collection('${widget.channelDiscussion}')
-                     .doc(widget.postID)
-                     .update({
-                       'comments': FieldValue.increment(1),
-                       'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
-                       'reactedBy': widget.reactedBy,
-                     }).whenComplete(() {
-                       widget.reactedBy.forEach((key, value) {
-                         if(key == widget.currentUser) {
-                           print('No send notification here cause it is current user.');
-                         } else {
-                         FirebaseFirestore.instance
-                           .collection('users')
-                           .doc(key.toString())
-                           .collection('notifications')
-                           .doc(_timestampCreation.toString()+widget.currentUser)
-                           .set({
-                             'alreadySeen': false,
-                             'notificationID': _timestampCreation.toString()+widget.currentUser,
-                             'body': 'has commented this post 💬',
-                             'currentNotificationsToken': value.toString(),
-                             'lastUserProfilephoto': widget.currentUserPhoto,
-                             'lastUserUID': widget.currentUser,
-                             'lastUserUsername': widget.currentUserUsername,
-                             'postID': widget.postID,
-                             'title': widget.subject,
-                           }).whenComplete(() {
-                             print('Cloud Firestore : notifications updated for $key');
-                             widget.currentFocusNode.unfocus();
-                           });
-                         }
+                   .collection('${widget.channelDiscussion}')
+                   .doc(widget.postID)
+                   .collection('comments')
+                   .doc(widget.commentID)
+                   .update({
+                     'comments': FieldValue.increment(1),
+                     'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                     'reactedBy': widget.reactedBy,
+                   }).whenComplete(() {
+                   widget.reactedBy.forEach((key, value) {
+                     if(key == widget.currentUser) {
+                       print('No send notification here cause it is current user.');
+                     } else {
+                     FirebaseFirestore.instance
+                       .collection('users')
+                       .doc(key.toString())
+                       .collection('notifications')
+                       .doc(_timestampCreation.toString()+widget.currentUser)
+                       .set({
+                         'alreadySeen': false,
+                         'notificationID': _timestampCreation.toString()+widget.currentUser,
+                         'body': 'has replied under this comment 💬',
+                         'currentNotificationsToken': value.toString(),
+                         'lastUserProfilephoto': widget.currentUserPhoto,
+                         'lastUserUID': widget.currentUser,
+                         'lastUserUsername': widget.currentUserUsername,
+                         'postID': widget.postID,
+                         'title': widget.subject,
+                       }).whenComplete(() {
+                         print('Cloud Firestore : notifications updated for $key');
                        });
-                     });
+                     }
+                   });
+                   });
                  });
               } else {
                 print('TextEditing : Nothing to send');
               }
-              widget.currentFocusNode.unfocus();
             },
             ),
           contentPadding: EdgeInsets.all(15.0),

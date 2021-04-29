@@ -22,8 +22,9 @@ import 'package:flutter/material.dart';
   setState((){
     publishingInProgress = true;
     keywords = subject.toLowerCase().split(' ');
-
+  });
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
+  Map<dynamic, dynamic> likedBy = {};
   FirebaseFirestore.instance
     .collection('$collectionPost')
     .doc('$_timestampCreation$currentUser')
@@ -37,7 +38,7 @@ import 'package:flutter/material.dart';
       'body': body,
       'commentedBy': FieldValue.arrayUnion(['000000']),
       'comments': 0,
-      'likedBy': FieldValue.arrayUnion(['000000']),
+      'likedBy': likedBy,
       'likes': 0,
       //
       'postID': '$_timestampCreation$currentUser',
@@ -57,7 +58,6 @@ import 'package:flutter/material.dart';
       });
       Navigator.pop(context);
     });
-  });
   }
 
 

@@ -20,6 +20,7 @@ import 'package:http/http.dart' as http;
 import '../bodyEditing.dart';
 import '../requestList.dart';
 import '../subjectEditing.dart';
+import 'liveChat/live_chat.dart';
 
 class HomeMenu extends StatefulWidget {
 
@@ -96,11 +97,24 @@ class HomeMenuState extends State<HomeMenu> with SingleTickerProviderStateMixin 
   double _dragValueEndFeedback; //222693;
   int _trackSplitFeedback = 6;
   ///////////////////////////////////////
+  
+
+  int connectedUsers;
+  fetchUsersConnected() {
+     FirebaseFirestore.instance
+      .collection('users')
+      .get().then((value) {
+        setState(() {
+          connectedUsers = value.docs.length;
+        });
+      });
+  }
 
 @override
   void initState() {
     _selectedIndex = 0;
     print('newDate = $newDate');
+    fetchUsersConnected();
     _controller = new TabController(length: 2, initialIndex: 0, vsync: this);
     super.initState();
   }
@@ -853,6 +867,125 @@ class HomeMenuState extends State<HomeMenu> with SingleTickerProviderStateMixin 
              ),
            ),*/
            body: new Container(
+             child: new Row(
+               mainAxisAlignment: MainAxisAlignment.start,
+               children: [
+                 new Container(
+                   height: MediaQuery.of(context).size.height,
+                   width: MediaQuery.of(context).size.width*0.25,
+                  decoration: new BoxDecoration(
+                    color: Color(0xff0d1117),
+                    border: new Border(
+                      right: new BorderSide(width: 1.5, color: Color(0xff21262D)),
+                    ),
+                  ),
+                   constraints: new BoxConstraints(
+                     minWidth: 250.0,
+                     minHeight: 500.0,
+                   ),
+                   child: new Scrollbar(
+                   child: new SingleChildScrollView(
+                     padding: EdgeInsets.only(bottom: 90.0),
+                     scrollDirection: Axis.vertical,
+                     child: new Column(
+                       mainAxisAlignment: MainAxisAlignment.start,
+                       children: [
+                         new Padding(
+                           padding: EdgeInsets.only(top: 50.0, left: 20.0),
+                            child: new Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                new Text("Producers",
+                                style: new TextStyle(color: Colors.white, fontSize: 25.0, fontWeight: FontWeight.bold,
+                                letterSpacing: 0.4,
+                                ),
+                                ),
+                                new Padding(
+                                  padding: EdgeInsets.only(left: 10.0),
+                                  child: new Container(
+                                    height: 15.0,
+                                    width: 15.0,
+                                    decoration: new BoxDecoration(
+                                      color: Colors.cyanAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                         new Padding(
+                           padding: EdgeInsets.only(top: 20.0, left: 20.0),
+                            child: new Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                new Text("Online : ",
+                                style: new TextStyle(color: Colors.grey[800], fontSize: 18.0, fontWeight: FontWeight.bold,
+                                letterSpacing: 0.4,
+                                ),
+                                ),
+                                 new Padding(
+                                  padding: EdgeInsets.only(left: 10.0),
+                                  child: new Text( connectedUsers != null ? connectedUsers.toString() : '',
+                                  style: new TextStyle(color: Colors.grey[600], fontSize: 22.0, fontWeight: FontWeight.bold, 
+                                  letterSpacing: 0.4,
+                                   ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                         new Padding(
+                           padding: EdgeInsets.only(top: 50.0, left: 20.0),
+                            child: new Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                new Text("Select a feed",
+                                style: new TextStyle(color: Colors.white, fontSize: 25.0, fontWeight: FontWeight.bold,
+                                letterSpacing: 0.4,
+                                ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          new ListCategorieDiscussion(
+                            currentUser: widget.currentUser,
+                            currentUserPhoto:  widget.currentUserPhoto,
+                            currentUserUsername: widget.currentUserUsername,
+                            currentAboutMe: widget.currentAboutMe,
+                            currentSoundCloud: widget.currentSoundCloud,
+                            currentSpotify: widget.currentSpotify,
+                            currentInstagram: widget.currentInstagram,
+                            currentYoutube: widget.currentYoutube,
+                            currentTwitter: widget.currentTwitter,
+                            currentTwitch: widget.currentTwitch,
+                            currentMixcloud: widget.currentMixcloud,
+                            currentNotificationsToken: widget.currentNotificationsToken,
+                          ),
+                       ],
+                     ),
+                   ),
+                   ),
+                 ),
+                 new Container(
+                   color: Color(0xff0d1117),
+                   height: MediaQuery.of(context).size.height,
+                   width: MediaQuery.of(context).size.width*0.75,
+                   constraints: new BoxConstraints(
+                     minWidth: 700.0,
+                     minHeight: 500.0,
+                   ),
+                   child: new LiveChat(
+                      currentUser: widget.currentUser,
+                      currentUserUsername: widget.currentUserUsername ,
+                      currentUserPhoto: widget.currentUserPhoto ,
+                      currentNotificationsToken: widget.currentNotificationsToken,
+                   ),
+                 ),
+               ],
+             ),
+           ),
+           /*new Container(
              child: new SingleChildScrollView(
                padding: EdgeInsets.only(bottom: 80.0),
                scrollDirection: Axis.vertical,
@@ -944,40 +1077,7 @@ class HomeMenuState extends State<HomeMenu> with SingleTickerProviderStateMixin 
                ],
              ),
              ),
-           ),
-            /*new TabBarView(
-             physics: new NeverScrollableScrollPhysics(),
-             controller: _controller,
-             children: [
-              new HomeAllPosts(
-              currentUser: widget.currentUser,
-              currentUserPhoto:  widget.currentUserPhoto,
-              currentUserUsername: widget.currentUserUsername,
-              currentAboutMe: widget.currentAboutMe,
-              currentSoundCloud: widget.currentSoundCloud,
-              currentSpotify: widget.currentSpotify,
-              currentInstagram: widget.currentInstagram,
-              currentYoutube: widget.currentYoutube,
-              currentTwitter: widget.currentTwitter,
-              currentTwitch: widget.currentTwitch,
-              currentMixcloud: widget.currentMixcloud,
-              currentNotificationsToken: widget.currentNotificationsToken,
-              ),
-              new HomeFeedback(
-              currentUser: widget.currentUser,
-              currentUserPhoto:  widget.currentUserPhoto,
-              currentUserUsername: widget.currentUserUsername,
-              currentAboutMe: widget.currentAboutMe,
-              currentSoundCloud: widget.currentSoundCloud,
-              currentSpotify: widget.currentSpotify,
-              currentInstagram: widget.currentInstagram,
-              currentYoutube: widget.currentYoutube,
-              currentTwitter: widget.currentTwitter,
-              currentTwitch: widget.currentTwitch,
-              currentMixcloud: widget.currentMixcloud,
-              currentNotificationsToken: widget.currentNotificationsToken,
-              ),
-             ]),*/
+           ),*/
     );
   }
 }
