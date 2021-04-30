@@ -110,7 +110,38 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
               height: heightCard,
               width: widthCard,
               decoration: new BoxDecoration(
-                gradient: new LinearGradient(
+                color: Color(0xff0d1117),
+                boxShadow: [
+                  new BoxShadow(
+                    color: indexCategories == 0
+                      ? Color(0xff3499FF)
+                      : indexCategories == 1
+                      ? Color(0xff00B8BA)
+                      : indexCategories == 2
+                      ? Color(0xff6454F0)
+                      : indexCategories == 3
+                      ? Color(0xffFF6CAB)
+                      : indexCategories == 4
+                      ? Color(0xff6EE2F5)
+                      : indexCategories == 5
+                      ? Color(0xff7BF2E9)
+                      : indexCategories == 6
+                      ? Color(0xffFF9482)
+                      : indexCategories == 7
+                      ? Color(0xffF869D5)
+                      : indexCategories == 8
+                      ? Color(0xffFF5B94)
+                      : indexCategories == 9
+                      ? Color(0xffFF9897)
+                      : indexCategories == 10
+                      ? Color(0xffFFCDA5)
+                      : Colors.grey[900],
+                    spreadRadius: 3,
+                    blurRadius: 5,
+                    offset: Offset(0, 0), // changes position of shadow
+                  ),
+                ],
+                /*gradient: new LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors:indexCategories == 0
@@ -136,7 +167,7 @@ class ListCategorieDiscussionState extends State<ListCategorieDiscussion> {
                 : indexCategories == 10
                 ? [Color(0xffFFCDA5), Color(0xffEE4D5F)]
                 : Colors.grey[900],
-                ),
+                ),*/
                 borderRadius: new BorderRadius.circular(10.0),
               ),
               child: categoriePointed == indexCategories

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flanger_web_version/home/subpageCategorie/dialog_profile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:like_button/like_button.dart';
@@ -55,7 +56,7 @@ class SubReplyState extends State<SubReply> {
   }
 
   Future<bool> onLikeButtonTapped(bool isLiked, Map<dynamic, dynamic> likedBy, String replyID) async {
-    if(likedBy.containsKey(widget.currentUser) == false) {
+    if(likedBy.isEmpty || likedBy.containsKey(widget.currentUser) == false) {
       setState(() {
         likedBy[widget.currentUser] = widget.currentUserUsername;
       });
@@ -147,7 +148,25 @@ class SubReplyState extends State<SubReply> {
                    new Row(
                      mainAxisAlignment: MainAxisAlignment.start,
                      children: [
-                   new Container(
+                  new Tooltip(
+                   message: 'See profile',
+                   textStyle: new  TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.normal),
+                   child: new InkWell(
+                     onTap: () {
+                      showDialog(
+                        context: context, 
+                        builder: (context) {
+                          return new AlertDialog(
+                            backgroundColor: Color(0xff21262D),
+                            title: new DialogProfile(
+                              adminUID: ds['replierUID'],
+                              adminProfilephoto: ds['replierProfilephoto'],
+                              adminUsername: ds['replierUsername'],
+                            ),
+                          );
+                       });
+                     },
+                   child: new Container(
                      height: 40.0,
                      width: 40.0,
                      decoration: new BoxDecoration(
@@ -160,6 +179,8 @@ class SubReplyState extends State<SubReply> {
                      : new Container(),
                      ),
                    ),
+                   ),
+                  ),
                      ],
                    ),
                    new Padding(
@@ -227,9 +248,9 @@ class SubReplyState extends State<SubReply> {
                             ],
                           ),
                           ds['withImage'] == true && ds['imageURL'] != null
-                         ? new Row(
+                         ? /*new Row(
                             mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
+                            children: [*/
                               new Padding(
                                 padding: EdgeInsets.only(top: 15.0),
                                 child: new Center(
@@ -244,6 +265,10 @@ class SubReplyState extends State<SubReply> {
                                         return new AlertDialog(
                                           backgroundColor: Colors.transparent,
                                           title: new Container(
+                                            constraints: new BoxConstraints(
+                                              maxHeight: MediaQuery.of(context).size.height*0.80,
+                                              maxWidth: MediaQuery.of(context).size.width*0.80,
+                                            ),
                                             decoration: new BoxDecoration(
                                               color: Colors.grey[900],
                                               borderRadius: new BorderRadius.circular(5.0),
@@ -264,14 +289,14 @@ class SubReplyState extends State<SubReply> {
                                   child: new ClipRRect(
                                     borderRadius: new BorderRadius.circular(5.0),
                                   child: new Image.network(ds['imageURL'], fit: BoxFit.cover),
-                                  ),
                                 ),
                                 ),
                                 ),
                                 ),
-                              ),
-                            ],
-                          )
+                                ),
+                              )
+                           /* ],
+                          )*/
                           : new Container(),
                           new Row(
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -322,14 +347,14 @@ class SubReplyState extends State<SubReply> {
                                         style: new TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.normal),
                                         children: [
                                           new TextSpan(
-                                            text: ds['likedBy'] != null && ds['likedBy'].length < 3
+                                            text: !ds['likedBy'].isEmpty && ds['likedBy'].length < 3
                                             ? ds['likedBy'].values.toList().join(', ').toString()
-                                            : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == true
+                                            : !ds['likedBy'].isEmpty && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == true
                                             ? ds['likedBy'][widget.currentUser].toString() 
                                             + ', ' + ds['likedBy'].values.elementAt(1).toString() 
                                             + ', ' + (ds['likedBy'].length-2).toString() 
                                             + ' others'
-                                            : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == false
+                                            : !ds['likedBy'].isEmpty && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == false
                                             ? ds['likedBy'].values.elementAt(0).toString() 
                                             + ', ' + ds['likedBy'].values.elementAt(1).toString() 
                                             + ', ' + (ds['likedBy'].length-2).toString() 

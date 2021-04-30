@@ -6,6 +6,14 @@ import 'package:flutter/material.dart';
   String collectionPost,
   bool withImage,
   String imageURL,
+  bool withTrack,
+  String trackURL,
+
+  double trackDuration,
+  int divisions,
+  double startParticularPart,
+  double endParticularPart,
+
   String currentUser,
   String currentUserUsername,
   String currentUserPhoto,
@@ -13,30 +21,37 @@ import 'package:flutter/material.dart';
   String body, 
   String subject, 
   StateSetter setState, 
-  bool publishingInProgress, 
   BuildContext context, 
   TextEditingController subjectEditingController, 
   TextEditingController bodyEditingController,
   ) {
   List<String> keywords;
   setState((){
-    publishingInProgress = true;
+    //publishingInProgress = true;
     keywords = subject.toLowerCase().split(' ');
   });
   int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
   Map<dynamic, dynamic> likedBy = {};
+  Map<dynamic, dynamic> commentedBy = {};
+  Map<dynamic, dynamic> savedBy = {};
   FirebaseFirestore.instance
     .collection('$collectionPost')
     .doc('$_timestampCreation$currentUser')
     .set({
       'withImage': withImage,
       'imageURL': imageURL,
+      'withTrack': withTrack,
+      'trackURL': trackURL,
+      'trackDuration': trackDuration,
+      'divisions': divisions,
+      'startParticularPart': startParticularPart,
+      'endParticularPart': endParticularPart,
       'adminNotificationsToken': currentNotificationsToken,
       'adminProfilephoto': currentUserPhoto,
       'adminUID': currentUser,
       'adminUsername': currentUserUsername,
       'body': body,
-      'commentedBy': FieldValue.arrayUnion(['000000']),
+      'commentedBy': commentedBy,
       'comments': 0,
       'likedBy': likedBy,
       'likes': 0,
@@ -45,7 +60,7 @@ import 'package:flutter/material.dart';
       'subject': subject,
       'timestamp': _timestampCreation,
       'keywords': FieldValue.arrayUnion(keywords),
-      'savedBy': FieldValue.arrayUnion([000000]),
+      'savedBy': savedBy,
       'reactedBy': {
         '$currentUser': currentNotificationsToken,
       }
@@ -54,7 +69,7 @@ import 'package:flutter/material.dart';
       subjectEditingController.clear();
       bodyEditingController.clear();
       setState((){
-        publishingInProgress = false;
+       // publishingInProgress = false;
       });
       Navigator.pop(context);
     });

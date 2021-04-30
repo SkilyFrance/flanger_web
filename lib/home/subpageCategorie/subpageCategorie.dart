@@ -1,6 +1,10 @@
 import 'dart:html';
-
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flanger_web_version/home/subpageCategorie/dialog_profile.dart';
+import 'package:flanger_web_version/home/subpageCategorie/post_audioplayer.dart';
+import 'package:flanger_web_version/home/subpageCategorie/post_simple.dart';
+import 'package:flanger_web_version/home/subpageCategorie/subdialog_audio.dart';
 import 'package:flanger_web_version/home/subpageCategorie/subpage_comment.dart';
 import 'package:flanger_web_version/home/subpageCategorie/subpage_textEditing.dart';
 import 'package:flutter/cupertino.dart';
@@ -50,7 +54,7 @@ class SubPageCategorie extends StatefulWidget {
   SubPageCategorieState createState() => SubPageCategorieState();
 }
 
-class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerProviderStateMixin  {
+class SubPageCategorieState extends State<SubPageCategorie> with TickerProviderStateMixin {
 
   ScrollController _scrollBarController = new ScrollController();
   ScrollController _filterListViewController = new ScrollController();
@@ -70,7 +74,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
   
 
   Future<bool> onLikeButtonTapped(bool isLiked, Map<dynamic, dynamic> likedBy, String postID) async {
-    if(likedBy == null || likedBy.containsKey(widget.currentUser) == false) {
+    if(likedBy.isEmpty || likedBy.containsKey(widget.currentUser) == false) {
       setState(() {
         likedBy[widget.currentUser] = widget.currentUserUsername;
         print('likedBy = ' + likedBy.toString());
@@ -172,10 +176,16 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
       .snapshots();
   }
 
+  //Floating button
+  AnimationController _controller;
+  static const List<IconData> icons = const [CupertinoIcons.pencil, Icons.music_note];
+
   @override
   void initState() {
     _fetchPost = fetchPost();
     _tabbarController = new TabController(length: 4, vsync: this);
+    _controller = new AnimationController(
+      vsync: this,duration: const Duration(milliseconds: 100));
     super.initState();
   }
 
@@ -184,65 +194,104 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
   Widget build(BuildContext context) {
     return new Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: new FloatingActionButton(
-        backgroundColor: widget.indexCategories == 0
-         ? Color(0xff3499FF)
-         : widget.indexCategories == 1
-         ? Color(0xff00B8BA)
-         : widget.indexCategories == 2
-         ? Color(0xff6454F0)
-         : widget.indexCategories == 3
-         ? Color(0xffFF6CAB)
-         : widget.indexCategories == 4
-         ? Color(0xff6EE2F5)
-         : widget.indexCategories == 5
-         ? Color(0xff7BF2E9)
-         : widget.indexCategories == 6
-         ? Color(0xffFF9482)
-         : widget.indexCategories == 7
-         ? Color(0xffF869D5)
-         : widget.indexCategories == 8
-         ? Color(0xffFF5B94)
-         : widget.indexCategories == 9
-         ? Color(0xffFF9897)
-         : widget.indexCategories == 10
-         ? Color(0xffFFCDA5)
-         : Colors.grey[900],
-         child: new Center(
-           child: new Icon(CupertinoIcons.add, color: Colors.white),
-         ),
-        onPressed: () {
-          showDialog(
-            context: context, 
-            builder: (context) {
-              return new StatefulBuilder(
-                builder: (contextDialog, dialogSetState){
-                  return new AlertDialog(
-                    backgroundColor: Color(0xff212121),
-                    title: new Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                          new Center(
-                            child: new Container(
-                              width: MediaQuery.of(context).size.height*0.70,
-                              child: new Center(
-                              child: new Text('New post',
-                              style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.bold),
-                              ),
-                              ),
-                            ),
-                        ),
-                          new Padding(
-                            padding: EdgeInsets.only(top: 30.0),
-                            child: new Center(
-                              child: new Text('About',
-                              style: new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                          new Padding(
-                          padding: EdgeInsets.only(top: 20.0, left: 0.0, right: 0.0),
-                            child: new SubjectEditingController(
+      floatingActionButton: new Column(
+        mainAxisSize: MainAxisSize.min,
+        children: new List.generate(icons.length, (int index) {
+          Widget child = new Container(
+            height: 70.0,
+            width: 56.0,
+            alignment: FractionalOffset.topCenter,
+            child: new ScaleTransition(
+              scale: new CurvedAnimation(
+                parent: _controller,
+                curve: new Interval(
+                  0.0,
+                  1.0 - index / icons.length / 2.0,
+                  curve: Curves.easeOut
+                ),
+              ),
+              child: new FloatingActionButton(
+                heroTag: null,
+                backgroundColor: widget.indexCategories == 0
+                  ? Color(0xff3499FF)
+                  : widget.indexCategories == 1
+                  ? Color(0xff00B8BA)
+                  : widget.indexCategories == 2
+                  ? Color(0xff6454F0)
+                  : widget.indexCategories == 3
+                  ? Color(0xffFF6CAB)
+                  : widget.indexCategories == 4
+                  ? Color(0xff6EE2F5)
+                  : widget.indexCategories == 5
+                  ? Color(0xff7BF2E9)
+                  : widget.indexCategories == 6
+                  ? Color(0xffFF9482)
+                  : widget.indexCategories == 7
+                  ? Color(0xffF869D5)
+                  : widget.indexCategories == 8
+                  ? Color(0xffFF5B94)
+                  : widget.indexCategories == 9
+                  ? Color(0xffFF9897)
+                  : widget.indexCategories == 10
+                  ? Color(0xffFFCDA5)
+                  : Colors.grey[900],
+                mini: true,
+                child: new Icon(icons[index], color: Colors.white),
+                onPressed: () {
+                  _controller.reverse();
+                  if(index == 1) {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return new AlertDialog(
+                          backgroundColor: Color(0xff21262D),
+                          title: new PostAudioPlayer(
+                              channelDiscussion: widget.indexCategories == 0
+                                ? 'Melodies'
+                                : widget.indexCategories == 1
+                                ? 'Vocals'
+                                : widget.indexCategories == 2
+                                ? 'Sound Design'
+                                : widget.indexCategories == 3
+                                ? 'Composition'
+                                : widget.indexCategories == 4
+                                ? 'Drums'
+                                : widget.indexCategories == 5
+                                ? 'Bass'
+                                : widget.indexCategories == 6
+                                ? 'Automation'
+                                : widget.indexCategories == 7
+                                ? 'Mixing'
+                                : widget.indexCategories == 8
+                                ? 'Mastering'
+                                : widget.indexCategories == 9
+                                ? 'Music theory'
+                                : widget.indexCategories == 10
+                                ? 'Filling up'
+                                : 'Melodies',
+                              colorSentButton: widget.indexCategories == 0
+                                ? Color(0xff3499FF)
+                                : widget.indexCategories == 1
+                                ? Color(0xff00B8BA)
+                                : widget.indexCategories == 2
+                                ? Color(0xff6454F0)
+                                : widget.indexCategories == 3
+                                ? Color(0xffFF6CAB)
+                                : widget.indexCategories == 4
+                                ? Color(0xff6EE2F5)
+                                : widget.indexCategories == 5
+                                ? Color(0xff7BF2E9)
+                                : widget.indexCategories == 6
+                                ? Color(0xffFF9482)
+                                : widget.indexCategories == 7
+                                ? Color(0xffF869D5)
+                                : widget.indexCategories == 8
+                                ? Color(0xffFF5B94)
+                                : widget.indexCategories == 9
+                                ? Color(0xffFF9897)
+                                : widget.indexCategories == 10
+                                ? Color(0xffFFCDA5)
+                                : Colors.grey[900],
                               currentUser: widget.currentUser,
                               currentUserPhoto: widget.currentUserPhoto,
                               currentUserUsername: widget.currentUserUsername,
@@ -255,144 +304,63 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                               currentTwitch: widget.currentTwitch,
                               currentMixcloud: widget.currentMixcloud,
                               currentNotificationsToken: widget.currentNotificationsToken,
-                              currentFocusNode: _subjectEditingFocusNode,
-                              currentTextEditingController: _subjectEditingController,
                           ),
-                        ),
-                         new Padding(
-                            padding: EdgeInsets.only(top: 20.0),
-                            child: _photoUploadInProgress == false && _fileURLPhotoUploaded == 'null'
-                            ? new InkWell(
-                              onTap: () {
-                              if(kIsWeb) {
-                                InputElement uploadInput = FileUploadInputElement();
-                                uploadInput.accept = '.png,.jpg';
-                                uploadInput.click();
-                                uploadInput.onChange.listen((event) {
-                                  final filePhoto = uploadInput.files.first;
-                                  final reader = FileReader();
-                                  reader.readAsDataUrl(filePhoto);
-                                  reader.onLoadEnd.listen((loadEndEvent) async {
-                                   dialogSetState(() {
-                                      _imageUploadedToPost = filePhoto;
-                                      _photoUploadInProgress = true;
-                                    });
-                                    int _timeStampFileURL = DateTime.now().microsecondsSinceEpoch;
-                                    final _storage = firebase_storage.FirebaseStorage.instance;
-                                    var ref = _storage.refFromURL('gs://flanger-39465.appspot.com');
-                                    var snapshot = await ref.child('${widget.currentUser}/imagePost/$_timeStampFileURL').putBlob(_imageUploadedToPost);
-                                    //var snapshot = await ref.child('${widget.currentUser}/temporaryPathTrackUploaded').putBlob(_musicUploaded);
-                                    print('Firebase storage (real path) : Image uploaded.');
-                                    var downloadUrl = await snapshot.ref.getDownloadURL().then((fileURL) {
-                                    dialogSetState(() {
-                                        _fileURLPhotoUploaded = fileURL;
-                                        _photoUploadInProgress = false;
-                                      });
-                                    });
-                                  });
-                                });
-                              } else {
-                                print('No ksiweb');
-                              }
-                              },
-                            child: new Container(
-                              height: 45.0,
-                              width: 200.0,
-                              decoration: new BoxDecoration(
-                                color: Colors.grey[900].withOpacity(0.5),
-                                borderRadius: new BorderRadius.circular(10.0),
-                                border: new Border.all(
-                                  width: 1.0,
-                                  color: widget.indexCategories == 0
-                                    ? Color(0xff3499FF)
-                                    : widget.indexCategories == 1
-                                    ? Color(0xff00B8BA)
-                                    : widget.indexCategories == 2
-                                    ? Color(0xff6454F0)
-                                    : widget.indexCategories == 3
-                                    ? Color(0xffFF6CAB)
-                                    : widget.indexCategories == 4
-                                    ? Color(0xff6EE2F5)
-                                    : widget.indexCategories == 5
-                                    ? Color(0xff7BF2E9)
-                                    : widget.indexCategories == 6
-                                    ? Color(0xffFF9482)
-                                    : widget.indexCategories == 7
-                                    ? Color(0xffF869D5)
-                                    : widget.indexCategories == 8
-                                    ? Color(0xffFF5B94)
-                                    : widget.indexCategories == 9
-                                    ? Color(0xffFF9897)
-                                    : widget.indexCategories == 10
-                                    ? Color(0xffFFCDA5)
-                                    : Colors.grey[900],
-                                ),
-                                ),
-                                child: new Center(
-                                  child: new Text('Add a file image', 
-                                  style: new TextStyle(color: Colors.grey[600], fontSize: 13.0),
-                                  ),
-                                ),
-                              ),
-                              )
-                              : _photoUploadInProgress == true && _fileURLPhotoUploaded == 'null'
-                              ? new Container(
-                              height: 45.0,
-                              width: 200.0,
-                              decoration: new BoxDecoration(
-                                color: Colors.grey[900].withOpacity(0.5),
-                                borderRadius: new BorderRadius.circular(10.0),
-                                border: new Border.all(
-                                  width: 1.0,
-                                  color: Colors.transparent,
-                                ),
-                                ),
-                                child: new Container(
-                                  height: 30.0,
-                                  width: 30.0,
-                                  child: new Center(
-                                    child: new CircularProgressIndicator(
-                                      valueColor: new AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              : new Container(
-                              height: 45.0,
-                              width: 200.0,
-                              decoration: new BoxDecoration(
-                                color: Colors.grey[900].withOpacity(0.5),
-                                borderRadius: new BorderRadius.circular(10.0),
-                                border: new Border.all(
-                                  width: 1.0,
-                                  color: Colors.transparent,
-                                ),
-                                ),
-                                child: new Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                  new Text('Uploaded ', 
-                                    style: new TextStyle(color: Colors.grey[600], fontSize: 13.0),
-                                  ),
-                                  new Padding(
-                                    padding: EdgeInsets.only(left: 10.0),
-                                    child: new Icon(CupertinoIcons.check_mark_circled, color: Colors.green, size: 20.0),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          new Padding(
-                            padding: EdgeInsets.only(top: 30.0),
-                            child: new Center(
-                              child: new Text('Body',
-                              style: new TextStyle(color: Colors.grey[600], fontSize: 15.0, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                        ),
-                          new Padding(
-                          padding: EdgeInsets.only(top: 20.0, left: 0.0, right: 0.0),
-                            child: new BodyEditingController(
+                        );
+                      }
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return new AlertDialog(
+                          backgroundColor: Color(0xff21262D),
+                          title: new PostSimple(
+                              channelDiscussion: widget.indexCategories == 0
+                                ? 'Melodies'
+                                : widget.indexCategories == 1
+                                ? 'Vocals'
+                                : widget.indexCategories == 2
+                                ? 'Sound Design'
+                                : widget.indexCategories == 3
+                                ? 'Composition'
+                                : widget.indexCategories == 4
+                                ? 'Drums'
+                                : widget.indexCategories == 5
+                                ? 'Bass'
+                                : widget.indexCategories == 6
+                                ? 'Automation'
+                                : widget.indexCategories == 7
+                                ? 'Mixing'
+                                : widget.indexCategories == 8
+                                ? 'Mastering'
+                                : widget.indexCategories == 9
+                                ? 'Music theory'
+                                : widget.indexCategories == 10
+                                ? 'Filling up'
+                                : 'Melodies',
+                              colorSentButton: widget.indexCategories == 0
+                                ? Color(0xff3499FF)
+                                : widget.indexCategories == 1
+                                ? Color(0xff00B8BA)
+                                : widget.indexCategories == 2
+                                ? Color(0xff6454F0)
+                                : widget.indexCategories == 3
+                                ? Color(0xffFF6CAB)
+                                : widget.indexCategories == 4
+                                ? Color(0xff6EE2F5)
+                                : widget.indexCategories == 5
+                                ? Color(0xff7BF2E9)
+                                : widget.indexCategories == 6
+                                ? Color(0xffFF9482)
+                                : widget.indexCategories == 7
+                                ? Color(0xffF869D5)
+                                : widget.indexCategories == 8
+                                ? Color(0xffFF5B94)
+                                : widget.indexCategories == 9
+                                ? Color(0xffFF9897)
+                                : widget.indexCategories == 10
+                                ? Color(0xffFFCDA5)
+                                : Colors.grey[900],
                               currentUser: widget.currentUser,
                               currentUserPhoto: widget.currentUserPhoto,
                               currentUserUsername: widget.currentUserUsername,
@@ -405,100 +373,62 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                               currentTwitch: widget.currentTwitch,
                               currentMixcloud: widget.currentMixcloud,
                               currentNotificationsToken: widget.currentNotificationsToken,
-                              currentFocusNode: _bodyEditingFocusNode,
-                              currentTextEditingController: _bodyEditingController,
                           ),
-                        ),
-                        new Padding(
-                          padding: EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0),
-                          child: new InkWell(
-                            onTap: () {
-                              requestPost(
-                              widget.indexCategories == 0
-                              ? 'Melodies'
-                              : widget.indexCategories == 1
-                              ? 'Vocals'
-                              : widget.indexCategories == 2
-                              ? 'Sound Design'
-                              : widget.indexCategories == 3
-                              ? 'Composition'
-                              : widget.indexCategories == 4
-                              ? 'Drums'
-                              : widget.indexCategories == 5
-                              ? 'Bass'
-                              : widget.indexCategories == 6
-                              ? 'Automation'
-                              : widget.indexCategories == 7
-                              ? 'Mixing'
-                              : widget.indexCategories == 8
-                              ? 'Mastering'
-                              : widget.indexCategories == 9
-                              ? 'Music theory'
-                              : widget.indexCategories == 10
-                              ? 'Filling up'
-                              : 'Melodies',
-                              _fileURLPhotoUploaded != 'null' ? true : false,
-                              _fileURLPhotoUploaded != 'null' ? _fileURLPhotoUploaded : null,
-                              widget.currentUser, 
-                              widget.currentUserUsername, 
-                              widget.currentUserPhoto, 
-                              widget.currentNotificationsToken, 
-                              _bodyEditingController.value.text, 
-                              _subjectEditingController.value.text, 
-                              dialogSetState, 
-                              publishingInProgress, 
-                              contextDialog, 
-                              _subjectEditingController,
-                              _bodyEditingController);
-                            },
-                        child: new Container(
-                          height: 45.0,
-                          width: 100.0,
-                          decoration: new BoxDecoration(
-                            color: widget.indexCategories == 0
-                              ? Color(0xff3499FF)
-                              : widget.indexCategories == 1
-                              ? Color(0xff00B8BA)
-                              : widget.indexCategories == 2
-                              ? Color(0xff6454F0)
-                              : widget.indexCategories == 3
-                              ? Color(0xffFF6CAB)
-                              : widget.indexCategories == 4
-                              ? Color(0xff6EE2F5)
-                              : widget.indexCategories == 5
-                              ? Color(0xff7BF2E9)
-                              : widget.indexCategories == 6
-                              ? Color(0xffFF9482)
-                              : widget.indexCategories == 7
-                              ? Color(0xffF869D5)
-                              : widget.indexCategories == 8
-                              ? Color(0xffFF5B94)
-                              : widget.indexCategories == 9
-                              ? Color(0xffFF9897)
-                              : widget.indexCategories == 10
-                              ? Color(0xffFFCDA5)
-                              : Colors.grey[900],
-                            borderRadius: new BorderRadius.circular(40.0),
-                          ),
-                          child: new Center(
-                            child: new Text('Publish',
-                            style: new TextStyle(color: Colors.white, fontSize: 15.0, fontWeight: FontWeight.normal),
-                            )
-                          ),
-                        ),
-                      ),
-                       ),
-                      ],
-                    ),
-                  );
-                });
-            }).whenComplete(() {
-              setState(() {
-                publishingInProgress = false;
-                _fileURLPhotoUploaded = 'null';
-              });
-            });
-        }),
+                        );
+                      }
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+          return child;
+        }).toList()..add(
+          new FloatingActionButton(
+            backgroundColor: widget.indexCategories == 0
+              ? Color(0xff3499FF)
+              : widget.indexCategories == 1
+              ? Color(0xff00B8BA)
+              : widget.indexCategories == 2
+              ? Color(0xff6454F0)
+              : widget.indexCategories == 3
+              ? Color(0xffFF6CAB)
+              : widget.indexCategories == 4
+              ? Color(0xff6EE2F5)
+              : widget.indexCategories == 5
+              ? Color(0xff7BF2E9)
+              : widget.indexCategories == 6
+              ? Color(0xffFF9482)
+              : widget.indexCategories == 7
+              ? Color(0xffF869D5)
+              : widget.indexCategories == 8
+              ? Color(0xffFF5B94)
+              : widget.indexCategories == 9
+              ? Color(0xffFF9897)
+              : widget.indexCategories == 10
+              ? Color(0xffFFCDA5)
+              : Colors.grey[900],
+            heroTag: null,
+            child: new AnimatedBuilder(
+              animation: _controller,
+              builder: (BuildContext context, Widget child) {
+                return new Transform(
+                  transform: new Matrix4.rotationZ(_controller.value * 0.5 * math.pi),
+                  alignment: FractionalOffset.center,
+                  child: new Icon(_controller.isDismissed ? CupertinoIcons.add : Icons.close),
+                );
+              },
+            ),
+            onPressed: () {
+              if (_controller.isDismissed) {
+                _controller.forward();
+              } else {
+                _controller.reverse();
+              }
+            },
+          ),
+        ),
+      ),
       appBar: new AppBar(
         backgroundColor: widget.indexCategories == 0
          ? Color(0xff3499FF)
@@ -1005,7 +935,25 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                       child: new Row(
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
-                                         new Container(
+                                         new Tooltip(
+                                          message: 'See profile',
+                                          textStyle: new  TextStyle(color: Colors.white, fontSize: 17.0, fontWeight: FontWeight.normal),
+                                         child: new InkWell(
+                                           onTap: () {
+                                             showDialog(
+                                               context: context, 
+                                               builder: (context) {
+                                                 return new AlertDialog(
+                                                   backgroundColor: Color(0xff21262D),
+                                                   title: new DialogProfile(
+                                                     adminUID: ds['adminUID'],
+                                                     adminProfilephoto: ds['adminProfilephoto'],
+                                                     adminUsername: ds['adminUsername'],
+                                                   ),
+                                                 );
+                                              });
+                                           },
+                                         child: new Container(
                                            height: 45.0,
                                            width: 45.0,
                                            decoration: new BoxDecoration(
@@ -1017,7 +965,7 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                            ? new Image.network(ds['adminProfilephoto'], fit: BoxFit.cover)
                                            : new Container(),
                                            ),
-                                         ),
+                                         ))),
                                          new Padding(
                                            padding: EdgeInsets.only(left: 5.0, top: 5.0),
                                            child: new Column(
@@ -1138,6 +1086,144 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                           ),
                                         ),
                                         new Padding(
+                                          padding: EdgeInsets.only(top: 20.0, left: 50.0, right: 50.0),
+                                          child: ds['withTrack'] != null && ds['trackURL'] != null
+                                          ? new Tooltip(
+                                            message: 'Click to play',
+                                            textStyle: new TextStyle(color: Colors.white, fontSize: 12.0),
+                                            child: new InkWell(
+                                              onTap: () {
+                                                showDialog(
+                                                  context: context, 
+                                                  builder: (context){
+                                                    return new AlertDialog(
+                                                      backgroundColor: Color(0xff21262D),
+                                                      title: new Container(
+                                                        child: new AudioPlayerContainer(
+                                                          channelDiscussion: widget.indexCategories == 0
+                                                            ? 'Melodies'
+                                                            : widget.indexCategories == 1
+                                                            ? 'Vocals'
+                                                            : widget.indexCategories == 2
+                                                            ? 'Sound Design'
+                                                            : widget.indexCategories == 3
+                                                            ? 'Composition'
+                                                            : widget.indexCategories == 4
+                                                            ? 'Drums'
+                                                            : widget.indexCategories == 5
+                                                            ? 'Bass'
+                                                            : widget.indexCategories == 6
+                                                            ? 'Automation'
+                                                            : widget.indexCategories == 7
+                                                            ? 'Mixing'
+                                                            : widget.indexCategories == 8
+                                                            ? 'Mastering'
+                                                            : widget.indexCategories == 9
+                                                            ? 'Music theory'
+                                                            : widget.indexCategories == 10
+                                                            ? 'Filling up'
+                                                            : 'Melodies',
+                                                          currentUser: widget.currentUser,
+                                                          currentUserUsername: widget.currentUserUsername,
+                                                          currentUserPhoto: widget.currentUserPhoto,
+                                                          currentNotificationsToken: widget.currentNotificationsToken,
+                                                         colorButton: widget.indexCategories == 0
+                                                        ? Color(0xff3499FF)
+                                                        : widget.indexCategories == 1
+                                                        ? Color(0xff00B8BA)
+                                                        : widget.indexCategories == 2
+                                                        ? Color(0xff6454F0)
+                                                        : widget.indexCategories == 3
+                                                        ? Color(0xffFF6CAB)
+                                                        : widget.indexCategories == 4
+                                                        ? Color(0xff6EE2F5)
+                                                        : widget.indexCategories == 5
+                                                        ? Color(0xff7BF2E9)
+                                                        : widget.indexCategories == 6
+                                                        ? Color(0xffFF9482)
+                                                        : widget.indexCategories == 7
+                                                        ? Color(0xffF869D5)
+                                                        : widget.indexCategories == 8
+                                                        ? Color(0xffFF5B94)
+                                                        : widget.indexCategories == 9
+                                                        ? Color(0xffFF9897)
+                                                        : widget.indexCategories == 10
+                                                        ? Color(0xffFFCDA5)
+                                                        : Colors.grey[900],
+                                                         index: postIndex,
+                                                         postID: ds['postID'],
+                                                         timestamp: ds['timestamp'],
+                                                         adminUID: ds['adminUID'],
+                                                         adminUsername: ds['adminUsername'],
+                                                         subject: ds['subject'],
+                                                         body: ds['subject'],
+                                                         trackDuration: ds['trackDuration'],
+                                                         trackURL: ds['trackURL'],
+                                                         //comments
+                                                         comments: ds['comments'],
+                                                         commentedBy: ds['commentedBy'],
+                                                         //reactedBy
+                                                         reactedBy: ds['reactedBy'],
+                                                         //AudioPlayerVariables
+                                                         postContainerTrackDivisions: ds['divisions'],
+                                                         postContainerTrackStartParticular: ds['startParticularPart'],
+                                                         postContainerTrackEndParticular: ds['endParticularPart'],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  });
+                                              },
+                                              child: new Container(
+                                                height: 100.0,
+                                                //width: 200.0,
+                                                decoration: new BoxDecoration(
+                                                  color: Color(0xff0d1117),
+                                                  borderRadius: new BorderRadius.circular(10.0),
+                                                  border: new Border.all(
+                                                    width: 1.0,
+                                                    color: Color(0xff21262D),
+                                                    ),
+                                                  boxShadow: [
+                                                    new BoxShadow(
+                                                      color: widget.indexCategories == 0
+                                                        ? Color(0xff3499FF)
+                                                        : widget.indexCategories == 1
+                                                        ? Color(0xff00B8BA)
+                                                        : widget.indexCategories == 2
+                                                        ? Color(0xff6454F0)
+                                                        : widget.indexCategories == 3
+                                                        ? Color(0xffFF6CAB)
+                                                        : widget.indexCategories == 4
+                                                        ? Color(0xff6EE2F5)
+                                                        : widget.indexCategories == 5
+                                                        ? Color(0xff7BF2E9)
+                                                        : widget.indexCategories == 6
+                                                        ? Color(0xffFF9482)
+                                                        : widget.indexCategories == 7
+                                                        ? Color(0xffF869D5)
+                                                        : widget.indexCategories == 8
+                                                        ? Color(0xffFF5B94)
+                                                        : widget.indexCategories == 9
+                                                        ? Color(0xffFF9897)
+                                                        : widget.indexCategories == 10
+                                                        ? Color(0xffFFCDA5)
+                                                        : Colors.grey[900],
+                                                      spreadRadius: 2,
+                                                      blurRadius: 2,
+                                                      offset: Offset(0, 0), // changes position of shadow
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: new Center(
+                                                  child: new Icon(CupertinoIcons.play_circle_fill, color: Colors.white, size: 30.0,
+                                                ),
+                                                ),
+                                              ),
+                                              ),
+                                            )
+                                          : new Container(),
+                                        ),
+                                        new Padding(
                                           padding: EdgeInsets.only(top: 20.0),
                                         child: ds['withImage'] == true && ds['imageURL'] != null
                                         ? new Tooltip(
@@ -1151,6 +1237,10 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                               return new AlertDialog(
                                                 backgroundColor: Colors.transparent,
                                                 title: new Container(
+                                                  constraints: new BoxConstraints(
+                                                    maxHeight: MediaQuery.of(context).size.height*0.80,
+                                                    maxWidth: MediaQuery.of(context).size.width*0.80,
+                                                  ),
                                                   decoration: new BoxDecoration(
                                                     color: Colors.grey[900],
                                                     borderRadius: new BorderRadius.circular(5.0),
@@ -1286,14 +1376,14 @@ class SubPageCategorieState extends State<SubPageCategorie> with SingleTickerPro
                                                                 style: new TextStyle(color: Colors.white, fontSize: 14.0, fontWeight: FontWeight.normal),
                                                                 children: [
                                                                   new TextSpan(
-                                                                    text: ds['likedBy'] != null && ds['likedBy'].length < 3
+                                                                    text: !ds['likedBy'].isEmpty && ds['likedBy'].length < 3
                                                                     ? ds['likedBy'].values.toList().join(', ').toString()
-                                                                    : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == true
+                                                                    : !ds['likedBy'].isEmpty && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == true
                                                                     ? ds['likedBy'][widget.currentUser].toString() 
                                                                     + ', ' + ds['likedBy'].values.elementAt(1).toString() 
                                                                     + ', ' + (ds['likedBy'].length-2).toString() 
                                                                     + ' others'
-                                                                    : ds['likedBy'] != null && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == false
+                                                                    : !ds['likedBy'].isEmpty && ds['likedBy'].length >= 3 && ds['likedBy'].containsKey(widget.currentUser) == false
                                                                     ? ds['likedBy'].values.elementAt(0).toString() 
                                                                     + ', ' + ds['likedBy'].values.elementAt(1).toString() 
                                                                     + ', ' + (ds['likedBy'].length-2).toString() 

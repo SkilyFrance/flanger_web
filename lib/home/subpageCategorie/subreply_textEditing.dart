@@ -39,7 +39,7 @@ class SubReplyTextEditing extends StatefulWidget {
   Map<dynamic, dynamic> likedBy;
   //
   int comments;
-  List<dynamic> commentedBy;
+  Map<dynamic, dynamic> commentedBy;
   //
   Map<dynamic, dynamic> reactedBy;
 
@@ -142,9 +142,14 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
           }
         },
         decoration: new InputDecoration(
-          prefixIcon: _photoUploadInProgress == false
-          ? new IconButton(
-            icon: new Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: widget.colorSentButton, size: 20.0),
+          prefixIcon: new IconButton(
+            icon: _photoUploadInProgress == false
+            ? new Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: widget.colorSentButton, size: 20.0)
+            : new Container(
+              height: 20.0,
+              width: 20.0,
+              child: new CircularProgressIndicator(backgroundColor: Color(0xff21262D), valueColor: new AlwaysStoppedAnimation<Color>(widget.colorSentButton)),
+            ),
             onPressed: () {
               if(kIsWeb) {
                 InputElement uploadInput = FileUploadInputElement();
@@ -247,6 +252,7 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                                       onTap: () {
                                       if(dialogTextEditingController.text.length > 0) {
                                       widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
+                                      widget.commentedBy[widget.currentUser] = widget.currentUserUsername;
                                       int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
                                       Map<dynamic, dynamic> likedBy = {};
                                       FirebaseFirestore.instance
@@ -274,6 +280,7 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                                         }).whenComplete(() {
                                           dialogTextEditingController.clear();
                                           dialogFocusNode.unfocus();
+                                          Navigator.pop(context);
                                           FirebaseFirestore.instance
                                           .collection('${widget.channelDiscussion}')
                                           .doc(widget.postID)
@@ -281,7 +288,7 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                                           .doc(widget.commentID)
                                           .update({
                                             'comments': FieldValue.increment(1),
-                                            'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                                            'commentedBy': widget.commentedBy,
                                             'reactedBy': widget.reactedBy,
                                           }).whenComplete(() {
                                           widget.reactedBy.forEach((key, value) {
@@ -305,7 +312,6 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                                                 'title': widget.subject,
                                               }).whenComplete(() {
                                                 print('Cloud Firestore : notifications updated for $key');
-                                                Navigator.pop(context);
                                               });
                                             }
                                           });
@@ -345,13 +351,13 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
               } else {
                 print('No ksiweb');
               }
-            })
-            : new CircularProgressIndicator(backgroundColor: Colors.grey[900], valueColor: new AlwaysStoppedAnimation<Color>(widget.colorSentButton)),
-          suffixIcon: new IconButton(
+            }),
+          suffixIcon: 
+          new IconButton(
             icon: inPosting == false 
             ? new Icon(CupertinoIcons.arrow_up_circle_fill, color: widget.currentTextEditingController.text.length > 0 ? widget.colorSentButton :  Colors.grey[600], size: 25.0)
             : new Container(height: 20.0, width: 20.0,
-            child: new CircularProgressIndicator(backgroundColor: Colors.grey[900], valueColor: new AlwaysStoppedAnimation<Color>(widget.colorSentButton)),
+            child: new CircularProgressIndicator(backgroundColor: Color(0xff21262D), valueColor: new AlwaysStoppedAnimation<Color>(widget.colorSentButton)),
             ),
             onPressed: () {
               if(widget.currentTextEditingController.text.length > 0) {
@@ -359,6 +365,7 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                 inPosting = true;
               });
                widget.reactedBy[widget.currentUser] = widget.currentNotificationsToken;
+               widget.commentedBy[widget.currentUser] = widget.currentUserUsername;
                int _timestampCreation = DateTime.now().microsecondsSinceEpoch;
                Map<dynamic, dynamic> likedBy = {};
                FirebaseFirestore.instance
@@ -396,7 +403,7 @@ class SubReplyTextEditingState extends State<SubReplyTextEditing> {
                    .doc(widget.commentID)
                    .update({
                      'comments': FieldValue.increment(1),
-                     'commentedBy': FieldValue.arrayUnion([widget.currentUser]),
+                     'commentedBy': widget.commentedBy,
                      'reactedBy': widget.reactedBy,
                    }).whenComplete(() {
                    widget.reactedBy.forEach((key, value) {

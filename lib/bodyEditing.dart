@@ -49,8 +49,9 @@ class BodyEditingControllerState extends State<BodyEditingController> {
     padding: EdgeInsets.only(top: 0.0, left: 20.0, right: 20.0, bottom: 0.0),
     child: new Container(
       height: 200.0,
+      width: MediaQuery.of(context).size.width*0.40,
       decoration: new BoxDecoration(
-        color: Colors.grey[800],
+        color: Color(0xff0d1117),
         borderRadius: new BorderRadius.circular(10.0),
       ),
       child: new TextField(
